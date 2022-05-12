@@ -1,0 +1,113 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "pass" : {
+            "type" : "object",
+            "defaultValue" : {
+                "keyname": "vault349",
+                "tenantId": "ce672b5e-7b4f-462c-8fdf-af7152984011",
+                "objectId": "59b1812c-b51a-4c42-8216-539dc5e8ec19",
+                "lawname": "loganws001",
+                "eventhubspacename": "evhubspc005",
+                "eventHubName": "evthub009"
+               }
+        }
+ },
+    "functions": [],
+    "variables": {},
+    "resources": [
+       {
+           "name": "[parameters('pass').keyname]",
+           "type": "Microsoft.KeyVault/vaults",
+           "apiVersion": "2019-09-01",
+           "location": "[resourceGroup().location]",
+           "tags": {
+               "displayName": "keyVault1"
+           },
+           "properties": {
+               "enabledForDeployment": true,
+               "enabledForTemplateDeployment": true,
+               "enabledForDiskEncryption": true,
+               "tenantId": "[parameters('pass').tenantId]",
+               "accessPolicies": [
+                   {
+                       "tenantId": "[parameters('pass').tenantId]",
+                       "objectId": "[parameters('pass').objectId]",
+                       "permissions": {
+                           "keys": [
+                               "Get"
+                           ],
+                           "secrets": [
+                               "List",
+                               "Get",
+                               "Set"
+                           ]
+                       }
+                   }
+               ],
+               "sku": {
+                   "name": "standard",
+                   "family": "A"
+               }
+           },
+           "resources": [
+               {
+                   "type": "secrets",
+                   "name": "keyVaultSecret1",
+                   "apiVersion": "2016-10-01",
+                   "dependsOn": [
+                       "[resourceId('Microsoft.KeyVault/vaults', parameters('pass').keyname)]"
+                   ],
+                   "properties": {
+                       "value": "secretValue"
+                   }
+               }
+           ]
+        },
+        {
+            "name": "[parameters('pass').lawname]",
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "apiVersion": "2020-10-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sku": {
+                    "name": "PerNode"
+                },
+                "features": {
+                    "searchVersion": 1
+                }
+            }
+        },
+        {
+      "type": "Microsoft.EventHub/namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[parameters('pass').eventhubspacename]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard",
+        "capacity": 1
+      },
+      "properties": {
+        "isAutoInflateEnabled": false,
+        "maximumThroughputUnits": 0
+      }
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/{1}', parameters('pass').eventhubspacename, parameters('pass').eventHubName)]",
+      "properties": {
+        "messageRetentionInDays": 7,
+        "partitionCount": 1
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', parameters('pass').eventhubspacename)]"
+      ]
+    }
+
+    ],
+
+    "outputs": {}
+}

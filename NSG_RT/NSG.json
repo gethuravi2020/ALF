@@ -1,0 +1,98 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "spokeNetwork": {
+            "type": "object",
+            "defaultvalue": {
+                "name": "spkvnet001",
+                "addressprefixs": "10.0.0.0/20",
+                "subnetname": "spksubn001",
+                "subnetprefix": "10.0.0.0/22",
+                "subnetnsgname": "spknsg001",
+                "routename": "route01"
+            }
+        }
+    },
+           
+    "resources": [
+            {
+                "name": "[parameters('spokeNetwork').name]",
+                "type": "Microsoft.Network/virtualNetworks",
+                "dependsOn": [
+                    "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spokeNetwork').subnetnsgname)]",
+                    "[resourceId('Microsoft.Network/routeTables',parameters('spokeNetwork').routename)]"
+                ],
+                
+                "apiVersion": "2020-11-01",
+                "location": "[resourceGroup().location]",
+                "properties": {
+                    "addressSpace": {
+                        "addressPrefixes": [
+                            "[parameters('spokeNetwork').addressprefixs]"
+                        ]
+                    },
+                    "subnets": [
+                        {
+                            "name": "[parameters('spokeNetwork').subnetname]",
+                            "properties": {
+                            "addressPrefix": "[parameters('spokeNetwork').subnetprefix]",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('spokeNetwork').subnetnsgname)]"
+                            },
+                            "routeTable":{
+                                "id": "[resourceId('Microsoft.Network/routeTables',parameters('spokeNetwork').routename)]"
+                            }
+                            }
+                        }
+                    ]
+                }
+                },
+            {
+                "name": "[parameters('spokeNetwork').subnetnsgname]",
+                "type": "Microsoft.Network/networkSecurityGroups",
+                "apiVersion": "2020-11-01",
+                "location": "[resourceGroup().location]",
+                "properties": {
+                    "securityRules": [
+                        {
+                            "name": "nsgRule1",
+                            "properties": {
+                                "description": "description",
+                                "protocol": "Tcp",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "*",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 100,
+                                "direction": "Inbound"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                    "name": "[parameters('spokeNetwork').routename]",
+                    "type": "Microsoft.Network/routeTables",
+                    "apiVersion": "2020-11-01",
+                    "location": "[resourceGroup().location]",
+                    "tags": {},
+                    "properties": {
+                        "routes": [
+                            {
+                                "name": "route001",
+                                "properties": {
+                                    "addressPrefix": "[parameters('spokeNetwork').addressprefixs]",
+                                    "nextHopType": "VirtualAppliance",
+                                    "nextHopIpAddress": "0.0.0.0"
+                                }
+                            }
+                        ],
+                        "disableBgpRoutePropagation": true
+                    }
+                }
+
+        ]
+        }
+          
