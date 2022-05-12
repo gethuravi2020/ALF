@@ -1,0 +1,163 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hubspokeenv": {
+            "type": "object",
+            "defaultValue":{
+                "hubvnetname":"LONHub-VNet",
+                "prodvnetname":"LONProd-VNet",
+                "drvnetname":"FRNKDR-VNet",
+                "drspokevnetname": "FRNKDRSpoke-VNet",
+                "mgmtsubscriptionId":"35263c3e-a195-4c34-8818-f4e893cdb513",
+                "mgmtsubscriptionRG":"Mgmt-Hub-Rg",
+                "drsubscriptionId":"69f26762-afa0-46b5-8311-4fbdf35b3060",
+                "drsubscriptionRG":"dr-hub-rg"
+            }
+        }
+    },
+    "functions": [],
+    "variables": {
+        "peering-name-hub-to-prod-one": "hub-to-prod-one",
+        "peering-name-prod-one-to-hub": "prod-one-to-hub",
+        "peering-name-hub-to-dr-one": "hub-to-dr-one",
+        "peering-name-dr-one-to-hub": "dr-one-to-hub",
+        "peering-name-drhub-to-drspoke-one": "drhub-to-drspoke-one",
+        "peering-name-drspoke-one-to-drhub": "drspoke-one-to-drhub",
+        "peering-name-prod-to-drspoke-one": "prod-to-drspoke-one",
+        "peering-name-drspoke-one-to-prod": "drspoke-one-to-prod"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').drvnetname, '/', variables('peering-name-dr-one-to-hub'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubspokeenv').hubvnetname)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').hubvnetname, '/', variables('peering-name-hub-to-dr-one'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/', parameters('hubspokeenv').drvnetname)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').hubvnetname, '/', variables('peering-name-hub-to-prod-one'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId(parameters('hubspokeenv').drsubscriptionId, parameters('hubspokeenv').drsubscriptionRG, 'Microsoft.Network/virtualNetworks',parameters('hubspokeenv').prodvnetname)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').drvnetname, '/', variables('peering-name-drhub-to-drspoke-one'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId(parameters('hubspokeenv').drsubscriptionId, parameters('hubspokeenv').drsubscriptionRG, 'Microsoft.Network/virtualNetworks',parameters('hubspokeenv').drspokevnetname)]"
+                }
+            }
+        },
+        {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "demoSubDeployment",     
+      "subscriptionId": "[parameters('hubspokeenv').drsubscriptionId]",
+      "resourceGroup": "[parameters('hubspokeenv').drsubscriptionRG]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').prodvnetname, '/', variables('peering-name-prod-to-drspoke-one'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId(parameters('hubspokeenv').drsubscriptionId, parameters('hubspokeenv').drsubscriptionRG, 'Microsoft.Network/virtualNetworks',parameters('hubspokeenv').drspokevnetname)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').drspokevnetname, '/', variables('peering-name-drspoke-one-to-prod'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId(parameters('hubspokeenv').drsubscriptionId, parameters('hubspokeenv').drsubscriptionRG, 'Microsoft.Network/virtualNetworks',parameters('hubspokeenv').prodvnetname)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').prodvnetname, '/', variables('peering-name-prod-one-to-hub'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId(parameters('hubspokeenv').mgmtsubscriptionId, parameters('hubspokeenv').mgmtsubscriptionRG, 'Microsoft.Network/virtualNetworks',parameters('hubspokeenv').hubvnetname)]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "name": "[concat(parameters('hubspokeenv').drspokevnetname, '/', variables('peering-name-drspoke-one-to-drhub'))]",
+            "apiVersion": "2018-08-01",
+            "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                    "id": "[resourceId(parameters('hubspokeenv').mgmtsubscriptionId, parameters('hubspokeenv').mgmtsubscriptionRG, 'Microsoft.Network/virtualNetworks',parameters('hubspokeenv').drvnetname)]"
+                }
+            }
+        }
+    ],
+    "outputs": {}
+                }
+            }
+        }
+    ]
+}

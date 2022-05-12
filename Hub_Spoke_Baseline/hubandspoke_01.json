@@ -1,0 +1,409 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "hubspokeenv": {
+            "type": "object",
+            "defaultValue":{
+                "hubvnetname":"LONHub-VNet",
+                "prodvnetname":"LONProd-VNet",
+                "drvnetname":"FRNKDR-VNet",
+                "drspokevnetname": "FRNKDRSpoke-VNet",
+                "prodHUBNSGName":"nsg-prod-hub-sn",
+                "drHUBNSGName":"nsg-dr-hub-sn",
+                "prodHubRTname":"rt-prod-hub-nva",
+                "drHubRTname":"rt-dr-hub-nva",
+                "drsubscriptionId":"69f26762-afa0-46b5-8311-4fbdf35b3060",
+                "drsubscriptionRG":"dr-hub-rg",
+                "dmzHubpublicipname":"dmzHubpip",
+                "dmzHubVpnName":"dmzHubVpn01",
+                "drHubpublicipname":"drHubpip",
+                "drHubVpnName":"drHubVpn01",
+                "dmzERpublicipname":"dmzERHubpip",
+                "dmzERVpnName":"dmzERHubVpn01",
+                "drERpublicipname":"drERHubpip",
+                "drERVpnName":"drERHubVpn01"
+            }
+        }
+    },
+    "functions": [],
+    "variables": {
+        "peering-name-hub-to-prod-one": "hub-to-prod-one",
+        "peering-name-prod-one-to-hub": "prod-one-to-hub",
+        "peering-name-hub-to-dr-one": "hub-to-dr-one",
+        "peering-name-dr-one-to-hub": "dr-one-to-hub",
+        "peering-name-drhub-to-drspoke-one": "drhub-to-drspoke-one",
+        "peering-name-drspoke-one-to-drhub": "drspoke-one-to-drhub"
+    },
+    "resources": [
+        {
+            "name": "[parameters('hubspokeenv').hubvnetname]",
+            "type": "Microsoft.Network/virtualNetworks",            
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Approver": "David",
+                "CostCenter": "123456",
+                "Budget": "654321",
+                "Env": "Mgmt"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "192.168.0.0/24"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "192.168.0.0/27"
+                        }
+                    },
+                    {
+                        "name": "PA-MGMT",
+                        "properties": {
+                            "addressPrefix": "192.168.0.32/27"
+                            
+                        }
+                        
+                    },
+                    {
+                        "name": "PA-Trsuted",
+                        "properties": {
+                            "addressPrefix": "192.168.0.64/27"                            
+                        }
+                    },
+                    {
+                        "name": "PA-UnTrusted",
+                        "properties": {
+                            "addressPrefix": "192.168.0.96/27"                            
+                        }
+                    },
+                    {
+                        "name": "Mgmt-SharedServices-01",
+                        "properties": {
+                            "addressPrefix": "192.168.0.128/27"                            
+                        }
+                    },
+                    {
+                        "name": "Mgmt-SharedServices-02",
+                        "properties": {
+                            "addressPrefix": "192.168.0.160/27"                            
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').drvnetname]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Approver": "David",
+                "CostCenter": "123456",
+                "Budget": "654321",
+                "Env": "DR"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "192.168.200.0/24"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "192.168.200.0/25"
+                         }
+                    },                   
+                    {
+                        "name": "DR-Subnet-02",
+                        "properties": {
+                            "addressPrefix": "192.168.200.128/25"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "demoSubDeployment",     
+      "subscriptionId": "[parameters('hubspokeenv').drsubscriptionId]",
+      "resourceGroup": "[parameters('hubspokeenv').drsubscriptionRG]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [        
+        {
+            "name": "[parameters('hubspokeenv').prodvnetname]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Approver": "David",
+                "CostCenter": "123456",
+                "Budget": "654321",
+                "Env": "Prod"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "192.168.100.0/24"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "Prod-Subnet-01",
+                        "properties": {
+                            "addressPrefix": "192.168.100.0/25"
+                        }
+                    },
+                    {
+                        "name": "Prod-Subnet-02",
+                        "properties": {
+                            "addressPrefix": "192.168.100.128/25"                           
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').drspokevnetname]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "Approver": "David",
+                "CostCenter": "123456",
+                "Budget": "654321",
+                "Env": "DR"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "192.168.220.0/24"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "DR-Subnet-01",
+                        "properties": {
+                            "addressPrefix": "192.168.220.0/25"                            
+                        }
+                    },
+                    {
+                        "name": "DR-Subnet-02",
+                        "properties": {
+                            "addressPrefix": "192.168.220.128/25"
+                        }
+                    }
+                ]
+            }
+        }         
+       
+    ]
+    
+                }
+            }
+        },
+    {
+            "name": "[parameters('hubspokeenv').dmzHubpublicipname]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "publicIPAddress1"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "londmzhubvpn"
+                }
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').dmzHubVpnName]",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').dmzHubpublicipname)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubspokeenv').hubvnetname)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubspokeenv').hubvnetname, 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').dmzHubpublicipname)]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "VpnGw2",
+                    "tier": "VpnGw2"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": false
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').drHubpublicipname]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "publicIPAddress1"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "gwcdrhubvpn"
+                }
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').drHubVpnName]",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').drHubpublicipname)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubspokeenv').drvnetname)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubspokeenv').drvnetname, 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').drHubpublicipname)]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "VpnGw2",
+                    "tier": "VpnGw2"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": false
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').dmzERpublicipname]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "publicIPAddress1"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "lonerhubvpn"
+                }
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').dmzERVpnName]",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').dmzERpublicipname)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubspokeenv').hubvnetname)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubspokeenv').hubvnetname, 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').dmzERpublicipname)]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "Standard",
+                    "tier": "Standard"
+                },
+                "gatewayType": "ExpressRoute"
+                
+        }
+    },
+        {
+            "name": "[parameters('hubspokeenv').drERpublicipname]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "publicIPAddress1"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "gwcerhubvpn"
+                }
+            }
+        },
+        {
+            "name": "[parameters('hubspokeenv').drERVpnName]",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2020-11-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').drERpublicipname)]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('hubspokeenv').drvnetname)]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('hubspokeenv').drvnetname, 'GatewaySubnet')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('hubspokeenv').drERpublicipname)]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "Standard",
+                    "tier": "Standard"
+                },
+                "gatewayType": "ExpressRoute"
+        
+            }
+        }
+    ],
+    "outputs": {}
+}

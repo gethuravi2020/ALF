@@ -1,0 +1,181 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineTier": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Free"
+            ],
+            "metadata": {
+                "description": "Specifiy whether you want to enable Standard tier for Virtual Machine resource type"
+            }
+        },
+        "autoProvision": {
+            "type": "string",
+            "defaultValue":"On",
+            "allowedValues": [
+                "On",
+                "Off"
+            ]
+ 
+        },
+        "eventHubDetails": {
+            "type": "string",
+            "defaultValue":"/subscriptions/35263c3e-a195-4c34-8818-f4e893cdb513/resourceGroups/Mgmt-Hub-Rg/providers/Microsoft.EventHub/namespaces/eventhub-kd3444lpqkt3y/eventhubs/eventhub-kd3444lpqkt3y/authorizationRules/eventhubpolicy"
+        },
+        "resourceGroupName": {
+            "type": "string",
+            "defaultValue":"Mgmt-Hub-Rg"
+        },
+        "additionalEmailAddresses": {
+            "type": "string",
+            "defaultValue":"ggpraj@gmail.com"
+        },
+        "minimalSeverity": {
+            "type": "string",
+            "defaultValue":"Medium"
+        },
+        "notificationRole": {
+            "type": "string",
+            "defaultValue": "Contributor"
+        },
+        "namespaces_Security_EHN_name": {
+            "type": "String",
+            "defaultValue": "eventHub-kd3444lpqkt3y"
+            
+        },
+        "eventhub_security_name": {
+            "type": "string",
+            "defaultValue": "eventhub-kd3444lpqkt3y"
+            
+        },
+        "authorizationRulesNameeventhub": {
+            "type": "string",
+            "defaultValue": "RootManageSharedAccessKey"
+        }        
+    },
+    "functions": [],
+    "variables": {
+        "SeperatedEventHubDetails": "[split(parameters('eventHubDetails'),'/')]"
+    },
+    "resources": [
+    {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "VirtualMachines",
+            "properties": {
+                "pricingTier": "[parameters('virtualMachineTier')]"
+            }
+        },
+        {
+            "name": "default",
+            "type": "Microsoft.Security/autoProvisioningSettings",
+            "apiVersion": "2017-08-01-preview",
+            "properties": {
+                "autoProvision": "[parameters('autoProvision')]"
+            }
+        },
+        {
+            "name": "default",
+            "type": "Microsoft.Security/securityContacts",
+            "apiVersion": "2020-01-01-preview",
+            "properties": {
+                "emails": "[parameters('additionalEmailAddresses')]",
+                "alertNotifications": {
+                    "state": "On",
+                    "minimalSeverity": "[parameters('minimalSeverity')]"
+                },
+                "notificationsByRole": {
+                    "state": "On",
+                    "roles": [
+                        "[parameters('notificationRole')]"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "name": "exportToEventHub01",
+            "dependsOn": [
+                ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "tags": {},
+                            "apiVersion": "2019-01-01-preview",
+                            "location": "Eastus",
+                            "name": "exportToEventHub02",
+                            "type": "Microsoft.Security/automations",
+                            "dependsOn": [],
+                            "properties": {
+                                "description": "Export Azure Security Center data to Event Hub",
+                                "isEnabled": true,
+                                "scopes": [
+                                    {
+                                        "description": "scope for subscription",
+                                        "scopePath": "[subscription().id]"
+                                    }
+                                ],
+                                "sources": [
+                                    {
+                                        "eventSource": "Alerts",
+                                        "ruleSets": [
+                                            {
+                                                "rules": [
+                                                    {
+                                                        "propertyJPath": "Severity",
+                                                        "propertyType": "String",
+                                                        "expectedValue": "medium",
+                                                        "operator": "Equals"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "rules": [
+                                                    {
+                                                        "propertyJPath": "Severity",
+                                                        "propertyType": "String",
+                                                        "expectedValue": "high",
+                                                        "operator": "Equals"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "actions": [
+                                    {
+                                        "sasPolicyName": "[parameters('authorizationRulesNameeventhub')]",
+                                        "actionType": "EventHub",
+                                        "eventHubResourceId": "[concat('/', variables('SeperatedEventHubDetails')[1], '/', variables('SeperatedEventHubDetails')[2], '/', variables('SeperatedEventHubDetails')[3], '/', variables('SeperatedEventHubDetails')[4], '/', variables('SeperatedEventHubDetails')[5], '/', variables('SeperatedEventHubDetails')[6], '/', variables('SeperatedEventHubDetails')[7], '/', variables('SeperatedEventHubDetails')[8], '/', variables('SeperatedEventHubDetails')[9], '/', variables('SeperatedEventHubDetails')[10])]",
+                                        "connectionString": "[listkeys(parameters('eventHubDetails'),'2017-04-01').primaryConnectionString]"
+                                        
+                                    }
+                                ]
+                            }
+                        }
+                        
+                    ]
+                }
+            },
+            "resourceGroup": "[parameters('resourceGroupName')]"
+        } ],
+    "outputs":  {
+        "nameResult": { 
+            "type": "string", 
+            "value": "[parameters('eventHubDetails')]"
+            }
+            }
+   
+}
+
