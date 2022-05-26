@@ -24,11 +24,11 @@
         },
         "eventHubDetails": {
             "type": "string",
-            "defaultValue":"/subscriptions/35263c3e-a195-4c34-8818-f4e893cdb513/resourceGroups/Mgmt-Hub-Rg/providers/Microsoft.EventHub/namespaces/eventhub-kd3444lpqkt3y/eventhubs/eventhub-kd3444lpqkt3y/authorizationRules/eventhubpolicy"
+            "defaultValue":"/subscriptions/69bc249a-10fa-42bf-af4f-1ae74c56fdbd/resourceGroups/Test1/providers/Microsoft.EventHub/namespaces/event01ii/eventhubs/event001/authorizationRules/policy01"
         },
         "resourceGroupName": {
             "type": "string",
-            "defaultValue":"Mgmt-Hub-Rg"
+            "defaultValue":"Test1"
         },
         "additionalEmailAddresses": {
             "type": "string",
@@ -44,17 +44,17 @@
         },
         "namespaces_Security_EHN_name": {
             "type": "String",
-            "defaultValue": "eventHub-kd3444lpqkt3y"
+            "defaultValue": "event01ii"
             
         },
         "eventhub_security_name": {
             "type": "string",
-            "defaultValue": "eventhub-kd3444lpqkt3y"
+            "defaultValue": "event001"
             
         },
         "authorizationRulesNameeventhub": {
             "type": "string",
-            "defaultValue": "RootManageSharedAccessKey"
+            "defaultValue": "policy01"
         }        
     },
     "functions": [],

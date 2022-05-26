@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaultName": {
+            "value": "gfsdgfdghdf"
+        },
+        "policyName": {
+            "value": "backluppolicy"
+        },
+        "scheduleRunTimes": {
+            "value": [
+                "2022-05-27T04:00:00Z"
+            ]
+        },
+        "timeZone": {
+            "value": "GMT Standard Time"
+        },
+        "instantRpRetentionRangeInDays": {
+            "value": 2
+        },
+        "dailyRetentionDurationCount": {
+            "value": 7
+        },
+        "daysOfTheWeek": {
+            "value": [
+                "Sunday"
+            ]
+        },
+        "weeklyRetentionDurationCount": {
+            "value": 4
+        },
+        "monthlyRetentionDurationCount": {
+            "value": 12
+        },
+        "monthsOfYear": {
+            "value": [
+                "January"
+            ]
+        },
+        "yearlyRetentionDurationCount": {
+            "value": 7
+        },
+        "location": {
+            "value": "eastus"
+        }
+    }
+}
