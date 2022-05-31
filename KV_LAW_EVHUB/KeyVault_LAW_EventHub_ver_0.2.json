@@ -1,0 +1,186 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "keyname" : {
+            "type" : "string",
+            "defaultValue" : "uks-dmz-prod-kv",
+            "allowedValues": [
+                "uks-dmz-prod-kv"
+            ]
+        }, 
+        "objectId": {
+            "type": "string",
+            "defaultValue" : "59b1812c-b51a-4c42-8216-539dc5e8ec19",
+            "allowedValues":[
+                "59b1812c-b51a-4c42-8216-539dc5e8ec19"
+            ]
+        },
+        "lawname": {
+            "type": "string",
+            "defaultValue":"uks-az-law-p1",
+            "allowedValues":[
+                "uks-az-law-p1"
+            ]
+        },
+        "eventhubspacename": {
+            "type": "string",
+            "defaultValue": "uks-az-evhns-p1",
+            "allowedValues":[
+                "uks-az-evhns-p1"
+            ]
+        },
+        "eventHubName": {
+            "type": "string",
+            "defaultValue": "uks-az-evhn-p1",
+            "allowedValues":[
+                "uks-az-evhn-p1"
+            ]
+        },
+        "tenantId": {
+            "type": "string",
+            "defaultValue": "ce672b5e-7b4f-462c-8fdf-af7152984011",
+            "allowedValues": [
+                "ce672b5e-7b4f-462c-8fdf-af7152984011"
+            ] 
+        },
+        "Storageaccountname": {
+            "type": "string",
+            "defaultValue": "lonhubukssadiag",
+            "allowedValues": [
+                "lonhubukssadiag"
+            ]
+        },
+        "blobcontinername": {
+            "type": "string",
+            "defaultValue": "lonhubuksblco",
+            "allowedValues": [
+                "lonhubuksblco"
+            ]
+        }
+ },
+    "functions": [],
+    "variables": {},
+    "resources": [
+       {
+           "name": "[parameters('keyname')]",
+           "type": "Microsoft.KeyVault/vaults",
+           "apiVersion": "2019-09-01",
+           "location": "[resourceGroup().location]",
+           "tags": {
+               "displayName": "keyVault1"
+           },
+           "properties": {
+               "enabledForDeployment": true,
+               "enabledForTemplateDeployment": true,
+               "enabledForDiskEncryption": true,
+               "tenantId": "[parameters('tenantId')]",
+               "accessPolicies": [
+                   {
+                       "tenantId": "[parameters('tenantId')]",
+                       "objectId": "[parameters('objectId')]",
+                       "permissions": {
+                           "keys": [
+                               "Get"
+                           ],
+                           "secrets": [
+                               "List",
+                               "Get",
+                               "Set"
+                           ]
+                       }
+                   }
+               ],
+               "sku": {
+                   "name": "standard",
+                   "family": "A"
+               }
+           },
+           "resources": [
+               {
+                   "type": "secrets",
+                   "name": "keyVaultSecret1",
+                   "apiVersion": "2016-10-01",
+                   "dependsOn": [
+                       "[resourceId('Microsoft.KeyVault/vaults', parameters('keyname'))]"
+                   ],
+                   "properties": {
+                       "value": "secretValue"
+                   }
+               }
+           ]
+        },
+        {
+            "name": "[parameters('lawname')]",
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "apiVersion": "2020-10-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sku": {
+                    "name": "PerNode"
+                },
+                "features": {
+                    "searchVersion": 1
+                }
+            }
+        },
+        {
+      "type": "Microsoft.EventHub/namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[parameters('eventhubspacename')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Standard",
+        "capacity": 1
+      },
+      "properties": {
+        "isAutoInflateEnabled": false,
+        "maximumThroughputUnits": 0
+      }
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}/{1}', parameters('eventhubspacename'), parameters('eventHubName'))]",
+      "properties": {
+        "messageRetentionInDays": 7,
+        "partitionCount": 1
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', parameters('eventhubspacename'))]"
+      ]
+    },
+    {
+        "name": "parameters(Storageaccountname)",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2021-04-01",
+        "tags": {
+            "displayName": "storageaccount1"
+        },
+        "location": "[resourceGroup().location]",
+        "kind": "StorageV2",
+        "sku": {
+            "name": "Standard_LRS",
+            "tier": "Standard"
+        },
+        "properties": {
+            "accessTier": "Cool"    
+        }
+    },
+    {
+        "name": "accountName/default/parameters(Storageaccountname)",
+        "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+        "apiVersion": "2021-04-01",
+        "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storageaccountname'))]"
+        ],
+        "properties": {
+            "publicAccess": "None"
+        }
+    }
+
+    ],
+
+    "outputs": {}
+}

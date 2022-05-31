@@ -1,0 +1,38 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "keyname": {
+           "type":"string",
+           "value" : "uks-dmz-prod-kv"
+        },    
+        "objectId": {
+            "type":"string",
+            "value" : "59b1812c-b51a-4c42-8216-539dc5e8ec19"
+        },
+        "lawname": {
+            "type":"string",
+            "value":"uks-az-law-p1"
+        },
+        "eventhubspacename": {
+            "type":"string",
+            "value": "uks-az-evhns-p1"
+        },
+        "eventHubName": {
+            "type":"string",
+           "value": "uks-az-evhn-p1"
+        },
+        "tenantId": {
+            "type":"string",
+            "value": "ce672b5e-7b4f-462c-8fdf-af7152984011"
+        },
+        "Storageaccountname": {
+            "type": "string",
+            "value": "lonhubukssadiag"
+        },
+        "blobcontinername": {
+            "type": "string",
+            "value":"lonhubuksblco"
+        }
+   }
+}
