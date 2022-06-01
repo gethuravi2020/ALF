@@ -1,0 +1,355 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineTier": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+                "Standard",
+                "Free"
+            ],
+            "metadata": {
+                "description": "Specifiy whether you want to enable Standard tier for Virtual Machine resource type"
+            }
+        },
+        "AppServicesTier": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "SqlServersTier": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "SqlServerVirtualMachines": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "OpenSourceRelationalDatabases": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "StorageAccounts": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "KeyVaults": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "Containers": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "Dns": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+        "Arm": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [
+            "Standard",
+            "Free"
+            ]
+        },
+            "autoProvision": {
+            "type": "string",
+            "defaultValue":"On",
+            "allowedValues": [
+                "On",
+                "Off"
+            ]
+ 
+        },
+        "eventHubDetails": {
+            "type": "string",
+            "defaultValue":"/subscriptions/12f61549-9674-4fc1-b79b-baa2e31ceecf/resourceGroups/testRG/providers/Microsoft.EventHub/namespaces/event002/eventhubs/event0012/authorizationRules/policy01"
+        },
+        "resourceGroupName": {
+            "type": "string",
+            "defaultValue":"testRG"
+        },
+        "additionalEmailAddresses": {
+            "type": "string",
+            "defaultValue":"ggpraj@gmail.com"
+        },
+        "minimalSeverity": {
+            "type": "string",
+            "defaultValue":"Medium"
+        },
+        "notificationRole": {
+            "type": "string",
+            "defaultValue": "Contributor"
+        },
+        "namespaces_Security_EHN_name": {
+            "type": "String",
+            "defaultValue": "event002"
+            
+        },
+        "eventhub_security_name": {
+            "type": "string",
+            "defaultValue": "event0012"
+            
+        },
+        "authorizationRulesNameeventhub": {
+            "type": "string",
+            "defaultValue": "RootManageSharedAccessKey"
+        },   
+        "workspaceName": {
+            "type": "string",
+            "defaultValue": "LAW01",
+            "metadata": {
+                "description": "Specify the name of your Log Analytics workspace to collect ASC data."
+            }
+        },
+        "workspaceResourceGroup": {
+            "type": "string",
+            "defaultValue": "testRG",
+            "metadata": {
+                "description": "Specify the resource group where the Log Analytics workspace is deployed."
+            }
+        },
+        "azureSubscriptionId": {
+            "type": "string",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf",
+            "metadata": {
+                "description": "Specify the Azure subscriptionId where the Log Analytics workspace is deployed."
+            }
+        }     
+    },
+    "functions": [],
+    "variables": {
+        "SeperatedEventHubDetails": "[split(parameters('eventHubDetails'),'/')]"
+    },
+    "resources": [
+    {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "VirtualMachines",
+            "properties": {
+                "pricingTier": "[parameters('virtualMachineTier')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "AppServices",
+            "properties": {
+                "pricingTier": "[parameters('AppServicesTier')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "SqlServers",
+            "properties": {
+                "pricingTier": "[parameters('SqlServersTier')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "SqlServerVirtualMachines",
+            "properties": {
+                "pricingTier": "[parameters('SqlServerVirtualMachines')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "OpenSourceRelationalDatabases",
+            "properties": {
+                "pricingTier": "[parameters('OpenSourceRelationalDatabases')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "StorageAccounts",
+            "properties": {
+                "pricingTier": "[parameters('StorageAccounts')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "KeyVaults",
+            "properties": {
+                "pricingTier": "[parameters('KeyVaults')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "Containers",
+            "properties": {
+                "pricingTier": "[parameters('Containers')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "Dns",
+            "properties": {
+                "pricingTier": "[parameters('Dns')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/pricings",
+            "apiVersion": "2018-06-01",
+            "name": "Arm",
+            "properties": {
+                "pricingTier": "[parameters('Arm')]"
+            }
+        },
+        {
+            "name": "default",
+            "type": "Microsoft.Security/autoProvisioningSettings",
+            "apiVersion": "2017-08-01-preview",
+            "properties": {
+                "autoProvision": "[parameters('autoProvision')]"
+            }
+        },
+        {
+            "type": "Microsoft.Security/workspaceSettings",
+            "apiVersion": "2017-08-01-preview",
+            "name": "default",
+            "properties": {
+                "workspaceId": "[concat('/subscriptions/', parameters('azureSubscriptionId'), '/resourceGroups/', parameters('workspaceResourceGroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]",
+                "scope": "[subscription().id]"
+            }
+        },
+        {
+            "name": "default",
+            "type": "Microsoft.Security/securityContacts",
+            "apiVersion": "2020-01-01-preview",
+            "properties": {
+                "emails": "[parameters('additionalEmailAddresses')]",
+                "alertNotifications": {
+                    "state": "On",
+                    "minimalSeverity": "[parameters('minimalSeverity')]"
+                },
+                "notificationsByRole": {
+                    "state": "On",
+                    "roles": [
+                        "[parameters('notificationRole')]"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "name": "exportToEventHub01",
+            "dependsOn": [
+                ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "tags": {},
+                            "apiVersion": "2019-01-01-preview",
+                            "location": "Eastus",
+                            "name": "exportToEventHub02",
+                            "type": "Microsoft.Security/automations",
+                            "dependsOn": [],
+                            "properties": {
+                                "description": "Export Azure Security Center data to Event Hub",
+                                "isEnabled": true,
+                                "scopes": [
+                                    {
+                                        "description": "scope for subscription",
+                                        "scopePath": "[subscription().id]"
+                                    }
+                                ],
+                                "sources": [
+                                    {
+                                        "eventSource": "Alerts",
+                                        "ruleSets": [
+                                            {
+                                                "rules": [
+                                                    {
+                                                        "propertyJPath": "Severity",
+                                                        "propertyType": "String",
+                                                        "expectedValue": "medium",
+                                                        "operator": "Equals"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "rules": [
+                                                    {
+                                                        "propertyJPath": "Severity",
+                                                        "propertyType": "String",
+                                                        "expectedValue": "high",
+                                                        "operator": "Equals"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "actions": [
+                                    {
+                                        "sasPolicyName": "[parameters('authorizationRulesNameeventhub')]",
+                                        "actionType": "EventHub",
+                                        "eventHubResourceId": "[concat('/', variables('SeperatedEventHubDetails')[1], '/', variables('SeperatedEventHubDetails')[2], '/', variables('SeperatedEventHubDetails')[3], '/', variables('SeperatedEventHubDetails')[4], '/', variables('SeperatedEventHubDetails')[5], '/', variables('SeperatedEventHubDetails')[6], '/', variables('SeperatedEventHubDetails')[7], '/', variables('SeperatedEventHubDetails')[8], '/', variables('SeperatedEventHubDetails')[9], '/', variables('SeperatedEventHubDetails')[10])]",
+                                        "connectionString": "[listkeys(parameters('eventHubDetails'),'2017-04-01').primaryConnectionString]"
+                                        
+                                    }
+                                ]
+                            }
+                        }
+                        
+                    ]
+                }
+            },
+            "resourceGroup": "[parameters('resourceGroupName')]"
+        } ],
+    "outputs":  {
+        "nameResult": { 
+            "type": "string", 
+            "value": "[parameters('eventHubDetails')]"
+            }
+            }
+   
+}
+
