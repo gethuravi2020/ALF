@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "keyname": {
+        "keyvaultName": {
            "type":"string",
            "value" : "uks-dmz-prod-kv"
         },    
@@ -10,15 +10,15 @@
             "type":"string",
             "value" : "59b1812c-b51a-4c42-8216-539dc5e8ec19"
         },
-        "lawname": {
+        "lawsName": {
             "type":"string",
             "value":"uks-az-law-p1"
         },
-        "eventhubspacename": {
+        "eventhubNamespace": {
             "type":"string",
             "value": "uks-az-evhns-p1"
         },
-        "eventHubName": {
+        "eventhubName": {
             "type":"string",
            "value": "uks-az-evhn-p1"
         },
@@ -26,13 +26,38 @@
             "type":"string",
             "value": "ce672b5e-7b4f-462c-8fdf-af7152984011"
         },
-        "Storageaccountname": {
+        "storageaccountName": {
             "type": "string",
-            "value": "lonhubukssadiag"
+            "value": "lonhubukssadiaggf"
         },
-        "blobcontinername": {
+        "blobcontainerName": {
             "type": "string",
             "value":"lonhubuksblco"
+        },
+        "eventhubAuthrule": {
+            "type": "string",
+            "value": "eventhubSAS"
+        },
+         "tags": {
+             "type":"object",
+            "value": {
+                "Approver": "Sergio Murteira",
+                "Budget": "INT-599",
+                "CostCenter": "US300 848017 119910",
+                "Department": "Infrastructure",
+                "Engineer": "Wipro Project Build Team",
+                "Environment": "Prod",
+                "ETSApplicationOwner": "Infrastructure",
+                "InceptionDate": "05/31/2022",
+                "Owner": "Darren Bellouny",
+                "PrimaryOwner": "Kav Khurana",
+                "PrimaryUse": "UKS DMZ Prod Hub",
+                "Requester": "Mark Gabriel",
+                "Ticket": "REQ0291719",
+                "StorageType":""
+            }
         }
+        }
+         
    }
-}
+

@@ -2,73 +2,66 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "keyname" : {
+        "keyvaultName" : {
             "type" : "string",
-            "defaultValue" : "uks-dmz-prod-kv",
-            "allowedValues": [
-                "uks-dmz-prod-kv"
-            ]
+            "defaultValue" : "alzuks-dmz-prod-kv"
         }, 
         "objectId": {
             "type": "string",
-            "defaultValue" : "59b1812c-b51a-4c42-8216-539dc5e8ec19",
-            "allowedValues":[
-                "59b1812c-b51a-4c42-8216-539dc5e8ec19"
-            ]
+            "defaultValue" : "59b1812c-b51a-4c42-8216-539dc5e8ec19"
         },
-        "lawname": {
+        "lawsName": {
             "type": "string",
-            "defaultValue":"uks-az-law-p1",
-            "allowedValues":[
-                "uks-az-law-p1"
-            ]
+            "defaultValue":"alzuks-az-law-p1"
         },
-        "eventhubspacename": {
+        "eventhubNamespace": {
             "type": "string",
-            "defaultValue": "uks-az-evhns-p1",
-            "allowedValues":[
-                "uks-az-evhns-p1"
-            ]
+            "defaultValue": "alzuks-az-evhns-p1"
         },
-        "eventHubName": {
+        "eventhubName": {
             "type": "string",
-            "defaultValue": "uks-az-evhn-p1",
-            "allowedValues":[
-                "uks-az-evhn-p1"
-            ]
+            "defaultValue": "alzuks-az-evhn-p1"
         },
         "tenantId": {
             "type": "string",
-            "defaultValue": "ce672b5e-7b4f-462c-8fdf-af7152984011",
-            "allowedValues": [
-                "ce672b5e-7b4f-462c-8fdf-af7152984011"
-            ] 
+            "defaultValue": "ce672b5e-7b4f-462c-8fdf-af7152984011"
         },
-        "Storageaccountname": {
+        "storageaccountName": {
             "type": "string",
-            "defaultValue": "lonhubukssadiag",
-            "allowedValues": [
-                "lonhubukssadiag"
-            ]
+            "defaultValue": "alzlonhubukssadiag"
         },
-        "blobcontinername": {
+        "blobcontainerName": {
             "type": "string",
-            "defaultValue": "lonhubuksblco",
-            "allowedValues": [
-                "lonhubuksblco"
-            ]
+            "defaultValue": "lonhubuksdiagblob"
+        },        
+        "eventhubAuthrule": {
+            "type": "string",
+            "defaultValue": "eventhubSAS"
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {}
+            
+        },
+        "StorageType": {
+            "type": "object",
+            "defaultValue": {
+                 "StorageType":"Diagnostic"
+            }
+            
         }
  },
     "functions": [],
     "variables": {},
     "resources": [
        {
-           "name": "[parameters('keyname')]",
+           "comments":"Azure Landing Zone KeyVault",
+           "name": "[parameters('keyvaultName')]",
            "type": "Microsoft.KeyVault/vaults",
            "apiVersion": "2019-09-01",
            "location": "[resourceGroup().location]",
            "tags": {
-               "displayName": "keyVault1"
+               "displayName": "[parameters('keyvaultName')]"
            },
            "properties": {
                "enabledForDeployment": true,
@@ -95,23 +88,11 @@
                    "name": "standard",
                    "family": "A"
                }
-           },
-           "resources": [
-               {
-                   "type": "secrets",
-                   "name": "keyVaultSecret1",
-                   "apiVersion": "2016-10-01",
-                   "dependsOn": [
-                       "[resourceId('Microsoft.KeyVault/vaults', parameters('keyname'))]"
-                   ],
-                   "properties": {
-                       "value": "secretValue"
-                   }
-               }
-           ]
+           }
         },
         {
-            "name": "[parameters('lawname')]",
+            "comments":"Azure Landing Zone Log Anlytics WorkSpace",
+            "name": "[parameters('lawsName')]",
             "type": "Microsoft.OperationalInsights/workspaces",
             "apiVersion": "2020-10-01",
             "location": "[resourceGroup().location]",
@@ -124,40 +105,42 @@
                 }
             }
         },
-        {
-      "type": "Microsoft.EventHub/namespaces",
-      "apiVersion": "2021-11-01",
-      "name": "[parameters('eventhubspacename')]",
-      "location": "[resourceGroup().location]",
-      "sku": {
-        "name": "Standard",
-        "tier": "Standard",
-        "capacity": 1
-      },
-      "properties": {
-        "isAutoInflateEnabled": false,
-        "maximumThroughputUnits": 0
-      }
-    },
     {
-      "type": "Microsoft.EventHub/namespaces/eventhubs",
-      "apiVersion": "2021-11-01",
-      "name": "[format('{0}/{1}', parameters('eventhubspacename'), parameters('eventHubName'))]",
-      "properties": {
-        "messageRetentionInDays": 7,
-        "partitionCount": 1
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.EventHub/namespaces', parameters('eventhubspacename'))]"
-      ]
-    },
+        "comments":"Azure Landing Zone NameSpace",
+        "type": "Microsoft.EventHub/namespaces",
+        "apiVersion": "2021-11-01",
+        "name": "[parameters('eventhubNamespace')]",
+        "location": "[resourceGroup().location]",
+        "sku": {
+            "name": "Standard",
+            "tier": "Standard",
+            "capacity": 1
+        },
+        "properties": {
+            "isAutoInflateEnabled": false,
+            "maximumThroughputUnits": 0
+        }
+        },
     {
-        "name": "parameters(Storageaccountname)",
+        "comments":"Azure Landing Zone EventHub",
+        "type": "Microsoft.EventHub/namespaces/eventhubs",
+        "apiVersion": "2021-11-01",
+        "tags":"[parameters('tags')]",
+        "name": "[format('{0}/{1}', parameters('eventhubNamespace'), parameters('eventhubName'))]",
+        "properties": {
+            "messageRetentionInDays": 7,
+            "partitionCount": 1
+        },
+        "dependsOn": [
+            "[resourceId('Microsoft.EventHub/namespaces', parameters('eventhubNamespace'))]"
+        ]
+        },
+    {
+        "comments":"Azure Landing Zone Storage Account",
+        "name": "[parameters('storageaccountName')]",
         "type": "Microsoft.Storage/storageAccounts",
         "apiVersion": "2021-04-01",
-        "tags": {
-            "displayName": "storageaccount1"
-        },
+        "tags": "[union(parameters('tags'),json('{\"StorageType\":\"Diagnostic \"}'))]",
         "location": "[resourceGroup().location]",
         "kind": "StorageV2",
         "sku": {
@@ -168,19 +151,54 @@
             "accessTier": "Cool"    
         }
     },
-    {
-        "name": "accountName/default/parameters(Storageaccountname)",
-        "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-        "apiVersion": "2021-04-01",
-        "dependsOn": [
-            "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storageaccountname'))]"
-        ],
-        "properties": {
-            "publicAccess": "None"
-        }
-    }
-
+{   
+    "comments":"Azure Landing Zone Storage Account Blob Container",
+    "name": "[concat(parameters('storageaccountName'),'/default/',parameters('blobcontainerName'))]",
+    "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+    "apiVersion": "2021-04-01",
+    "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageaccountName'))]"
     ],
+    "properties": {
+        "publicAccess": "None"
+    }
+},
+{
+        "comments":"Azure Landing Zone Eventhub NameSpaces Auth Rule",
+        "type": "Microsoft.EventHub/namespaces/AuthorizationRules",
+        "name": "[concat(parameters('eventHubNamespace'), '/', parameters('eventhubAuthrule'))]",
+        "apiVersion": "2021-11-01",
+        "location": "[resourceGroup().location]",
+        "properties": {
+            "rights": [
+                "Listen",
+                "Manage",
+                "Send"
+            ]
+        },
+        "dependsOn": [
+            "[resourceId('Microsoft.EventHub/namespaces', parameters('eventhubNamespace'))]"
+        ]
+    },
+    {
+        "comments":"Azure Landing Zone Eventhub Auth Rule",
+        "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",//[Azure_EventHub_AuthZ_Use_Min_Permissions_Access_Policies]use  minimum access policies at event hub level
+        "name": "[concat(parameters('eventhubNamespace'), '/', parameters('eventhubName'), '/', parameters('eventhubAuthrule'))]",
+        "apiVersion": "2021-11-01",
+        "location": "[resourceGroup().location]",
+        "properties": {
+            "rights": [
+                "Listen",
+                "Manage",
+                "Send"
+            ]
+        },
+        "dependsOn": [
+            "[resourceId('Microsoft.EventHub/namespaces', parameters('eventhubNamespace'))]",
+            "[resourceId('Microsoft.EventHub/namespaces/eventhubs', parameters('eventhubNamespace'), parameters('eventhubName'))]"
+        ]
+    }   
+ ],
 
     "outputs": {}
 }
