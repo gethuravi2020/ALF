@@ -41,13 +41,16 @@
             }
         },
         "dailyRetentionDurationCount": {
-            "type": "Int",
+            "type": "Int",            
             "metadata": {
                 "description": "Number of days you want to retain the backup"
             }
         },
         "daysOfTheWeek": {
             "type": "Array",
+            "defaultValue": [
+                "Sunday"
+            ],
             "metadata": {
                 "description": "Backup will run on array of Days like, Monday, Tuesday etc. Applies in Weekly retention only."
             }

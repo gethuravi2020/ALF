@@ -1,0 +1,116 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaultName": {
+            "type": "String",
+            "metadata": {
+                "description": "Name of the Recovery Services Vault"
+            }
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "locationDR": {
+            "type": "string",
+            "defaultValue":"Germany West Central"
+        },
+        "vNetNameDR": {
+            "type": "string",
+            "defaultValue":"dr-vnet"
+        },
+        "vNetNameProd": {
+            "type": "string",
+            "defaultValue":"prod-vnet"
+        }
+    },
+    "variables": {
+        "targetFabricName": "[concat(parameters('vaultName'), '/', parameters('locationDR'),'-fabric')]",
+        "sourceFabricName": "[concat(parameters('vaultName'), '/', 'uksouth-fabric')]",
+        "sourcevNetMappingName": "[concat(variables('sourceFabricName'), '/azureNetwork/', parameters('location'),'-', parameters('locationDR'),'-',parameters('vNetNameProd'))]",
+        "targetvNetMappingName": "[concat(variables('targetFabricName'), '/azureNetwork/', parameters('locationDR'),'-', parameters('location'),'-',parameters('vNetNameDR'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.RecoveryServices/vaults",
+            "apiVersion": "2020-10-01",
+            "name": "[parameters('vaultName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "RS0",
+                "tier": "Standard"
+            },
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.RecoveryServices/vaults/replicationPolicies",
+            "apiVersion": "2022-02-01",
+            "name":"[concat(parameters('vaultName'),'/ALF-24-hour-retention-policy')]",
+            "properties": {
+                "providerSpecificInput": {
+                    "instanceType": "A2A",
+                    "appConsistentFrequencyInMinutes": 0,
+                    "crashConsistentFrequencyInMinutes": 5,
+                    "multiVmSyncStatus": "Enable",
+                    "recoveryPointHistory": 1440
+                }
+            }
+        },
+        {
+            // Replication Fabric - Target Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('targetFabricName')]",            
+            "properties": {
+                "customDetails": {
+                    "instanceType": "Azure",
+                    "location": "[parameters('locationDR')]"
+                }
+            }
+        },
+        {
+            // Replication Fabric - Source Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('sourceFabricName')]",
+            "properties": {
+                "customDetails": {
+                    "instanceType": "Azure",
+                    "location": "[parameters('location')]"
+                }
+            }
+        },        
+        {
+            // Replication Network Mapping - Source Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings",
+            "apiVersion": "2018-07-10",
+            "name": "[variables('sourcevNetMappingName')]",
+            "properties": {
+                "recoveryFabricName": "[concat(parameters('locationDR'),'-fabric')]",
+                "recoveryNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetNameDR'))]",
+                "fabricSpecificDetails": {
+                    "instanceType": "AzureToAzure",
+                    "primaryNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetNameProd'))]"
+                }
+            }
+        },
+        {
+            // Replication Network Mapping - Target Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings",
+            "apiVersion": "2018-07-10",
+            "name": "[variables('targetvNetMappingName')]",
+            "properties": {
+                "recoveryFabricName": "[concat(parameters('location'),'-fabric')]",
+                "recoveryNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetNameProd'))]",
+                "fabricSpecificDetails": {
+                    "instanceType": "AzureToAzure",
+                    "primaryNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetNameDR'))]"
+                }
+            }
+        }        
+    ]
+}

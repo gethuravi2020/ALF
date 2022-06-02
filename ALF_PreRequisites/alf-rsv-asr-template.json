@@ -1,0 +1,320 @@
+{
+    /// Author: Dominique St-Amand
+    /// ARM Template for Azure Site Recovery setup as discussed in my blog post
+    /// https://www.domstamand.com/automating-azure-site-recovery-vms-with-arm-and-some-magic
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "The location under which the resources reside"
+            }
+        },
+        "locationDR": {
+            "type": "string",
+            "metadata": {
+                "description": "The location under which the DR resources reside"
+            }
+        },
+        "recoveryVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the Azure Site Recovery vault"
+            }
+        },
+        "cacheStorageAccountName": {
+            "type": "string",
+            "maxLength": 24,
+            "metadata": {
+                "description": "The name of the cache storage account for the source virtual machines"
+            }
+        },
+        "logAnalyticsName": {
+            "type": "string",
+            "metadata": {
+                "description": "The log analytics workspace name"
+            }
+        },
+        "logAnalyticsResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "The log analytics resource group name"
+            }
+        },
+        "vNetName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the existing virtual network to deploy the resources into."
+            }
+        },
+        "vnetResourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource group name of the existing virtual network to deploy resources into."
+            }
+        },
+        "vNetNameDR": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the existing virtual network of the DR to deploy the resources into."
+            }
+        },
+        "vnetResourceGroupNameDR": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource group name of the existing virtual network of the DR to deploy resources into."
+            }
+        }
+    },
+    "variables": {       
+
+        // The fabric object in the vault represents an Azure region.
+        // https://docs.microsoft.com/en-us/azure/site-recovery/azure-to-azure-powershell#create-a-site-recovery-fabric-object-to-represent-the-primary-source-region
+        "sourceFabricName": "[concat(parameters('recoveryVaultName'), '/', parameters('location'),'-fabric')]",
+        "targetFabricName": "[concat(parameters('recoveryVaultName'), '/', parameters('locationDR'),'-fabric')]",
+        "sourceFabricId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics',parameters('recoveryVaultName'),concat(parameters('location'),'-fabric'))]",
+        "targetFabricId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics',parameters('recoveryVaultName'),concat(parameters('locationDR'),'-fabric'))]",
+
+        // The protection container is a container used to group replicated items within a fabric.
+        "sourceContainerName": "[concat(variables('sourceFabricName'), '/', parameters('location'), '-container')]",
+        "targetContainerName": "[concat(variables('targetFabricName'), '/', parameters('locationDR'), '-container')]",
+        "sourceContainerId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers',parameters('recoveryVaultName'),concat(parameters('location'),'-fabric'),concat(parameters('location'),'-container'))]",
+        "targetContainerId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers',parameters('recoveryVaultName'),concat(parameters('locationDR'),'-fabric'),concat(parameters('locationDR'),'-container'))]",
+
+        "sourceContainerMappingName": "[concat(variables('sourceContainerName'), '/', parameters('location'), '-', parameters('locationDR'), '-24-hour-retention-policy')]",
+        "targetContainerMappingName": "[concat(variables('targetContainerName'), '/', parameters('locationDR'), '-', parameters('location'), '-24-hour-retention-policy')]",
+        "sourceContainerMappingId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers/replicationProtectionContainerMappings',parameters('recoveryVaultName'),concat(parameters('location'),'-fabric'),concat(parameters('location'),'-container'), concat(parameters('location'),'-', parameters('locationDR'),'-24-hour-retention-policy'))]",
+
+        "sourcevNetMappingName": "[concat(variables('sourceFabricName'), '/azureNetwork/', parameters('location'),'-', parameters('locationDR'),'-',parameters('vNetName'))]",
+        "targetvNetMappingName": "[concat(variables('targetFabricName'), '/azureNetwork/', parameters('locationDR'),'-', parameters('location'),'-',parameters('vNetNameDR'))]",
+        "sourcevNetMappingId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings',parameters('recoveryVaultName'),concat(parameters('location'),'-fabric'),'AzureNetwork',concat(parameters('location'), '-', parameters('locationDR'),'-',parameters('vNetName')))]",
+        "targetvNetMappingId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings',parameters('recoveryVaultName'),concat(parameters('locationDR'),'-fabric'),'AzureNetwork',concat(parameters('locationDR'), '-', parameters('location'),'-',parameters('vNetNameDR')))]"
+
+        
+    },
+    "resources": [
+        {
+            // Cache Storage Account
+            // Site Recovery needs extra storage account called cache storage in the source region.
+            // All the changes happening on the source VMs are tracked and sent to cache storage account before replicating those to the target location.
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-04-01",
+            "name": "[parameters('cacheStorageAccountName')]",
+            "location": "[parameters('locationDR')]",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "kind": "StorageV2",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.RecoveryServices/vaults",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('recoveryVaultName')]",
+            // Important:
+            // * The Recovery services vault and the virtual machines being protected, must be in different Azure locations.
+            // * The resource group of the Recovery services vault, and the virtual machines being protected, must be in different Azure locations.
+            // * The Recovery services vault, and the resource group to which it belongs, can be in the same Azure location.
+            // see https://docs.microsoft.com/en-us/azure/site-recovery/azure-to-azure-powershell#create-a-recovery-services-vault
+            "location": "[parameters('locationDR')]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {}
+        },
+        // Enables the Site Reovery Events to be piped to a log analytics workspace for further analysis / alerts, etc
+        {
+            "type": "Microsoft.RecoveryServices/vaults/providers/diagnosticSettings",
+            "apiVersion": "2017-05-01-preview",
+            "name": "[concat(parameters('recoveryVaultName'), '/Microsoft.Insights/', 'DiagnosticsToLogAnalytics')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryVaultName'))]"
+            ],
+            "properties": {
+                "workspaceId": "[resourceId(parameters('logAnalyticsResourceGroupName'),'Microsoft.OperationalInsights/workspaces',parameters('logAnalyticsName'))]",
+                "logs": [
+                    {
+                        "category": "AzureSiteRecoveryEvents",
+                        "enabled": true
+                    }
+                ]
+            }
+        },
+        {
+            // Storage configuration to make LRS instead of GRS-default as we're already in the DR location
+            "type": "Microsoft.RecoveryServices/vaults/backupstorageconfig",
+            "name": "[concat(parameters('recoveryVaultName'), '/vaultstorageconfig')]",
+            "apiVersion": "2018-01-10",
+            "dependsOn": [
+                "[resourceId('Microsoft.RecoveryServices/vaults/', parameters('recoveryVaultName'))]"
+            ],
+            "properties": {
+                "StorageModelType": "LocallyRedundant"
+            }
+        },
+        {
+            // Replication Policy - matches the ASR default
+            "type": "Microsoft.RecoveryServices/vaults/replicationPolicies",
+            "apiVersion": "2018-01-10",
+            "name": "[concat(parameters('recoveryVaultName'), '/24-hour-retention-policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryVaultName'))]"
+            ],
+            "properties": {
+                "providerSpecificInput": {
+                    "instanceType": "A2A",
+                    "appConsistentFrequencyInMinutes": 240,
+                    "crashConsistentFrequencyInMinutes": 5,
+                    "recoveryPointHistory": 1440,
+                    "multiVmSyncStatus": "Enable"
+                }
+            }
+        },
+        {
+            // Replication Fabric - Target Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('targetFabricName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryVaultName'))]",
+                "[variables('sourceFabricId')]"
+            ],
+            "properties": {
+                "customDetails": {
+                    "instanceType": "Azure",
+                    "location": "[parameters('locationDR')]"
+                }
+            }
+        },
+        {
+            // Replication Fabric - Source Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('sourceFabricName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.RecoveryServices/vaults', parameters('recoveryVaultName'))]"
+            ],
+            "properties": {
+                "customDetails": {
+                    "instanceType": "Azure",
+                    "location": "[parameters('location')]"
+                }
+            }
+        },
+        {
+            // Replication Container - Source Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('sourceContainerName')]",
+            "dependsOn": [
+                "[variables('sourceFabricId')]"
+            ],
+            "properties": {
+                "providerSpecificDetails": [
+                    {
+                        "instanceType": "A2A"
+                    }
+                ]
+            }
+        },
+        {
+            // Replication Container - Target Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('targetContainerName')]",
+            "dependsOn": [
+                "[variables('targetFabricId')]"
+            ],
+            "properties": {
+                "providerSpecificDetails": [
+                    {
+                        "instanceType": "A2A"
+                    }
+                ]
+            }
+        },
+        {
+            // Replication Protection Container Mapping - Source Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers/replicationProtectionContainerMappings",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('sourceContainerMappingName')]",
+            "dependsOn": [
+                "[variables('targetFabricId')]",
+                "[variables('sourceFabricId')]",
+                "[resourceId('Microsoft.RecoveryServices/vaults/replicationPolicies', parameters('recoveryVaultName'), '24-hour-retention-policy')]"
+               
+            ],
+            "properties": {
+                "targetProtectionContainerId": "[variables('targetContainerId')]",
+                "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationPolicies', parameters('recoveryVaultName'), '24-hour-retention-policy')]",
+                "providerSpecificInput": {
+                    "instanceType": "A2A"
+                    // This will create jobs in the automation account to update the mobility agents in the 2 fabrics. Make sure the automation account
+                    // has proper RBAC permissions on the Recovery Vault resource. I put it as contributor.
+                    //"agentAutoUpdateStatus": "Enabled",
+                    //"automationAccountArmId": "[resourceId('Microsoft.Automation/automationAccounts',parameters('automationAccountName'))]"
+                }
+            }
+        },
+        {
+            // Replication Protection Container Mapping - Target Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationProtectionContainers/replicationProtectionContainerMappings",
+            "apiVersion": "2018-01-10",
+            "name": "[variables('targetContainerMappingName')]",
+            "dependsOn": [
+                "[variables('sourceContainerMappingId')]",
+                "[resourceId('Microsoft.RecoveryServices/vaults/replicationPolicies', parameters('recoveryVaultName'), '24-hour-retention-policy')]"
+                
+            ],
+            "properties": {
+                "targetProtectionContainerId": "[variables('sourceContainerId')]",
+                "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/replicationPolicies', parameters('recoveryVaultName'), '24-hour-retention-policy')]",
+                "providerSpecificInput": {
+                    "instanceType": "A2A"
+                    //"agentAutoUpdateStatus": "Enabled",
+                    //"automationAccountArmId": "[resourceId('Microsoft.Automation/automationAccounts',parameters('automationAccountName'))]"
+                }
+            }
+        },
+        {
+            // Replication Network Mapping - Source Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings",
+            "apiVersion": "2018-07-10",
+            "name": "[variables('sourcevNetMappingName')]",
+            "dependsOn": [
+                "[variables('sourceFabricId')]",
+                "[variables('targetFabricId')]"
+            ],
+            "properties": {
+                "recoveryFabricName": "[concat(parameters('locationDR'),'-fabric')]",
+                "recoveryNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetNameDR'))]",
+                "fabricSpecificDetails": {
+                    "instanceType": "AzureToAzure",
+                    "primaryNetworkId": "[resourceId(parameters('vnetResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('vNetName'))]"
+                }
+            }
+        },
+        {
+            // Replication Network Mapping - Target Side
+            "type": "Microsoft.RecoveryServices/vaults/replicationFabrics/replicationNetworks/replicationNetworkMappings",
+            "apiVersion": "2018-07-10",
+            "name": "[variables('targetvNetMappingName')]",
+            "dependsOn": [
+                "[variables('sourcevNetMappingId')]",
+                "[variables('sourceFabricId')]",
+                "[variables('targetFabricId')]"
+            ],
+            "properties": {
+                "recoveryFabricName": "[concat(parameters('location'),'-fabric')]",
+                "recoveryNetworkId": "[resourceId(parameters('vnetResourceGroupName'),'Microsoft.Network/virtualNetworks', parameters('vNetName'))]",
+                "fabricSpecificDetails": {
+                    "instanceType": "AzureToAzure",
+                    "primaryNetworkId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vNetNameDR'))]"
+                }
+            }
+        }
+    ],
+    "outputs": {},
+    "functions": []
+}

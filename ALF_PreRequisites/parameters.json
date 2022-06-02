@@ -1,48 +1,61 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "vaultName": {
-            "value": "gfsdgfdghdf"
+            "type":"String",
+            "value": "rsv-alz-test-gwc"
         },
         "policyName": {
+            "type":"String",
             "value": "backluppolicy"
         },
         "scheduleRunTimes": {
+            "type": "Array",
             "value": [
-                "2022-05-27T04:00:00Z"
+                "2022-06-02T04:00:00Z"
             ]
         },
         "timeZone": {
+            "type": "String",
             "value": "GMT Standard Time"
         },
         "instantRpRetentionRangeInDays": {
+            "type": "Int",
             "value": 2
         },
         "dailyRetentionDurationCount": {
+            "type": "Int",
             "value": 7
         },
         "daysOfTheWeek": {
+            "type": "Array",
             "value": [
                 "Sunday"
             ]
         },
         "weeklyRetentionDurationCount": {
+            "type": "Int",
             "value": 4
         },
         "monthlyRetentionDurationCount": {
+            "type": "Int",
             "value": 12
         },
         "monthsOfYear": {
+            "type": "Array",
             "value": [
                 "January"
             ]
         },
         "yearlyRetentionDurationCount": {
+            "type": "Int",
             "value": 7
         },
         "location": {
-            "value": "eastus"
+            "type": "String",
+            "value": "Germany West Central"
         }
-    }
+    },
+    "resources":[]
 }
