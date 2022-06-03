@@ -3,34 +3,80 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "uksouth"
+            "value": "Germany West Central"
         },        
         "locationDR": {
-            "value": "Germany West Central"
+            "value": "UK South"
         },
         "vNetName": {
-            "value": "prod-vnet"
+            "value": "gwc-vnet1"
         },
         "vnetResourceGroupName": {
-            "value": "alf-mgmt-paas"
+            "value": "gwc-test1-rg"
         },
         "vNetNameDR": {
-            "value": "dr-asr-vent"
+            "value": "uks-test-vnet"
         },
         "vnetResourceGroupNameDR": {
-            "value": "alf-mgmt-pass-asr"
+            "value": "uks-test-rg"
         },
         "cacheStorageAccountName": {
-            "value": "alfmytestcachesa01"
+            "value": "alfmytestcachesa04"
         },
         "recoveryVaultName": {
-            "value": "alftestasrrsv"
+            "value": "alf-test-asr-rsv-failback"
         },        
         "logAnalyticsName": {
-            "value": "uks-law01"
+            "value": "law01"
         },
         "logAnalyticsResourceGroupName": {
-            "value": "alf-mgmt-paas"
+            "value": "uks-test-rg"
+        },        
+        "policyName": {
+            "type":"String",
+            "value": "alf-vm-backluppolicy"
+        },
+        "scheduleRunTimes": {
+            "type": "Array",
+            "value": [
+                "2022-06-10T01:00:00Z"
+            ]
+        },
+        "timeZone": {
+            "type": "String",
+            "value": "GMT Standard Time"
+        },
+        "instantRpRetentionRangeInDays": {
+            "type": "Int",
+            "value": 2
+        },
+        "dailyRetentionDurationCount": {
+            "type": "Int",
+            "value": 7
+        },
+        "daysOfTheWeek": {
+            "type": "Array",
+            "value": [
+                "Sunday"
+            ]
+        },
+        "weeklyRetentionDurationCount": {
+            "type": "Int",
+            "value": 4
+        },
+        "monthlyRetentionDurationCount": {
+            "type": "Int",
+            "value": 12
+        },
+        "monthsOfYear": {
+            "type": "Array",
+            "value": [
+                "January"
+            ]
+        },
+        "yearlyRetentionDurationCount": {
+            "type": "Int",
+            "value": 7
         }
    }
 }
