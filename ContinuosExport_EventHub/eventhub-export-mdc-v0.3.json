@@ -96,11 +96,11 @@
         },
         "eventHubDetails": {
             "type": "string",
-            "defaultValue":"/subscriptions/69f26762-afa0-46b5-8311-4fbdf35b3060/resourceGroups/paas-mgmt-rg/providers/Microsoft.EventHub/namespaces/alz-evhubns/eventhubs/alf-evhub-01/authorizationRules/evpolicy"
+            "defaultValue":"/subscriptions/12f61549-9674-4fc1-b79b-baa2e31ceecf/resourceGroups/testrg/providers/Microsoft.EventHub/namespaces/Event101/eventhubs/evhub0010/authorizationRules/evpolicy"
         },
         "resourceGroupName": {
             "type": "string",
-            "defaultValue":"paas-mgmt-rg"
+            "defaultValue":"testrg"
         },
         "additionalEmailAddresses": {
             "type": "string",
@@ -130,21 +130,21 @@
         },   
         "workspaceName": {
             "type": "string",
-            "defaultValue": "alz-laws-01",
+            "defaultValue": "law0001",
             "metadata": {
                 "description": "Specify the name of your Log Analytics workspace to collect ASC data."
             }
         },
         "workspaceResourceGroup": {
             "type": "string",
-            "defaultValue": "paas-mgmt-rg",
+            "defaultValue": "testrg",
             "metadata": {
                 "description": "Specify the resource group where the Log Analytics workspace is deployed."
             }
         },
         "azureSubscriptionId": {
             "type": "string",
-            "defaultValue": "69f26762-afa0-46b5-8311-4fbdf35b3060",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf",
             "metadata": {
                 "description": "Specify the Azure subscriptionId where the Log Analytics workspace is deployed."
             }
@@ -273,7 +273,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2019-10-01",
-            "name": "exportToEventHub01",
+            "name": "exportToEventHub-ALZ",
             "dependsOn": [
                 ],
             "properties": {
@@ -288,7 +288,7 @@
                             "tags": {},
                             "apiVersion": "2019-01-01-preview",
                             "location": "Eastus",
-                            "name": "exportToEventHub02",
+                            "name": "exportToEventHub-ALZ",
                             "type": "Microsoft.Security/automations",
                             "dependsOn": [],
                             "properties": {
