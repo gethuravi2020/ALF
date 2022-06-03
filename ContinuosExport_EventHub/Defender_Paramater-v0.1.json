@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineTier": {
+            "value": "Standard"
+        },
+        "AppServicesTier": {
+            "value": "Standard"
+        },
+        "SqlServersTier": {
+            "value": "Standard"
+        },
+        "SqlServerVirtualMachines": {
+            "value": "Standard"
+        },
+        "OpenSourceRelationalDatabases": {
+            "value": "Standard"
+        },
+        "StorageAccounts": {
+            "value": "Standard"
+        },
+        "KeyVaults": {
+            "value": "Standard"
+        },
+        "Containers": {
+            "value": "Standard"
+        },
+        "Dns": {
+            "value": "Standard"
+        },
+        "Arm": {
+            "value": "Standard"
+        },
+        "autoProvision": {
+            "value": "On"
+        },
+        "eventHubDetails": {
+            "value": "/subscriptions/69f26762-afa0-46b5-8311-4fbdf35b3060/resourceGroups/paas-mgmt-rg/providers/Microsoft.EventHub/namespaces/alz-evhubns/eventhubs/alf-evhub-01/authorizationRules/evpolicy"
+        },
+        "resourceGroupName": {
+            "value": "paas-mgmt-rg"
+        },
+        "additionalEmailAddresses": {
+            "value": "ggpraj@gmail.com"
+        },
+        "minimalSeverity": {
+            "value": "Medium"
+        },
+        "notificationRole": {
+            "value": "Contributor"
+        },
+        "namespaces_Security_EHN_name": {
+            "value": "event002"
+        },
+        "eventhub_security_name": {
+            "value": "event0012"
+        },
+        "authorizationRulesNameeventhub": {
+            "value": "RootManageSharedAccessKey"
+        },
+        "workspaceName": {
+            "value": "alz-laws-01"
+        },
+        "workspaceResourceGroup": {
+            "value": "paas-mgmt-rg"
+        },
+        "azureSubscriptionId": {
+            "value": "69f26762-afa0-46b5-8311-4fbdf35b3060"
+        }
+    }
+}
