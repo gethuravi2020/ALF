@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineTier": {
+            "value": "Standard"
+        },
+        "AppServicesTier": {
+            "value": "Standard"
+        },
+        "SqlServersTier": {
+            "value": "Standard"
+        },
+        "SqlServerVirtualMachines": {
+            "value": "Standard"
+        },
+        "OpenSourceRelationalDatabases": {
+            "value": "Standard"
+        },
+        "StorageAccounts": {
+            "value": "Standard"
+        },
+        "KeyVaults": {
+            "value": "Standard"
+        },
+        "Containers": {
+            "value": "Standard"
+        },
+        "Dns": {
+            "value": "Standard"
+        },
+        "Arm": {
+            "value": "Standard"
+        },
+        "autoProvision": {
+            "value": "On"
+        },
+        "eventHubnamespaceResID": {
+            "value": "/subscriptions/12f61549-9674-4fc1-b79b-baa2e31ceecf/resourceGroups/testrg/providers/Microsoft.EventHub/namespaces/Event101"
+        },
+        "eventHubauthDetails": {
+            "value": "eventhubs/evhub0010/authorizationRules/evpolicy"
+        },
+        "eventhubpolicydetails": {
+            "value": "authorizationRules/ievepolicy"
+        },
+        "resourceGroupName": {
+            "value": "testrg"
+        },
+        "additionalEmailAddresses": {
+            "value": "gapraj@gmail.com"
+        },
+        "minimalSeverity": {
+            "value": "Medium"
+        },
+        "notificationRole": {
+            "value": "Contributor"
+        },
+        "authorizationRulesNameeventhub": {
+            "value": "RootManageSharedAccessKey"
+        },
+        "workspaceName": {
+            "value": "law0001"
+        },
+        "workspaceResourceGroup": {
+            "value": "testrg"
+        },
+        "azureSubscriptionId": {
+            "value": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+        }
+    }
+}
