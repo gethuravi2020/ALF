@@ -91,17 +91,17 @@
             ]
  
         },
-        "eventHubnamespaceResID": {
+        "eventHubnamespace": {
             "type": "string",
-            "defaultValue":"/subscriptions/12f61549-9674-4fc1-b79b-baa2e31ceecf/resourceGroups/testrg/providers/Microsoft.EventHub/namespaces/Event101"
+            "defaultValue":"mytestevhub"
         },
-        "eventHubauthDetails": {
+        "eventHub": {
             "type": "string",
-            "defaultValue": "eventhubs/evhub0010/authorizationRules/evpolicy"
+            "defaultValue": "eventhub"
         },
-        "eventhubpolicydetails": {
+        "eventhubpolicy": {
             "type": "string",
-            "defaultValue":"authorizationRules/evpolicy"
+            "defaultValue":"evpolicy"
         },
         "resourceGroupName": {
             "type": "string",
@@ -147,7 +147,8 @@
     },
     "functions": [],
     "variables": {
-        "eventHubDetails": "[concat(parameters('eventHubnamespaceResID'),'/',parameters('eventHubauthDetails'))]"
+        "eventHubId":"[concat('/subscriptions/',parameters('azureSubscriptionId'),'/resourceGroups/',parameters('resourceGroupName'),'/providers/Microsoft.EventHub/namespaces/',parameters('eventHubnamespace'))]",
+        "eventHubPolicy":"[concat(variables('eventHubId'),'/eventhubs/',parameters('eventHub'),'/authorizationRules/',parameters('eventhubpolicy'))]"        
     },
     "resources": [
     {
@@ -294,13 +295,27 @@
                                         "description": "scope for subscription",
                                         "scopePath": "[subscription().id]"
                                     }
+                                ],                        
+                                "sources": [
+                                    {
+                                        "eventSource": "Alerts",                                        
+                                        "ruleSets": []
+                                    },
+                                    {
+                                        "eventSource": "SecureScores",
+                                        "ruleSets": []
+                                     },
+                                    {
+                                        "eventSource": "RegulatoryComplianceAssessment",
+                                        "ruleSets": []
+                                    }
                                 ],
                                 "actions": [
                                     {
                                         "sasPolicyName": "[parameters('authorizationRulesNameeventhub')]",
                                         "actionType": "EventHub",
-                                        "eventHubResourceId": "[variables('eventHubDetails')]",
-                                        "connectionString": "[listKeys(variables('eventHubDetails'),'2017-04-01').primaryConnectionString]"
+                                        "eventHubResourceId": "[variables('eventHubId')]",
+                                        "connectionString": "[listKeys(variables('eventHubPolicy'),'2017-04-01').primaryConnectionString]"
                                         
                                     }
                                 ]
@@ -315,7 +330,7 @@
     "outputs":  {
         "nameResult": { 
             "type": "string", 
-            "value": "[variables('eventHubDetails')]"
+            "value": "[variables('eventHubPolicy')]"
             }
             }
    

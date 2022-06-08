@@ -35,20 +35,8 @@
         "autoProvision": {
             "value": "On"
         },
-        "eventHubnamespace": {
-            "value": "mytestevhub"
-        },
-        "eventHub": {
-            "value": "eventhub"
-        },
-        "eventhubpolicy": {
-            "value": "evpolicy"
-        },
-        "resourceGroupName": {
-            "value": "azure-paas-rg"
-        },
         "additionalEmailAddresses": {
-            "value": "gapraj@gmail.com"
+            "value": "gapragwegherjhetjetaj@gmail.com"
         },
         "minimalSeverity": {
             "value": "Medium"
@@ -56,17 +44,11 @@
         "notificationRole": {
             "value": "Contributor"
         },
-        "authorizationRulesNameeventhub": {
-            "value": "RootManageSharedAccessKey"
-        },
         "workspaceName": {
             "value": "mytestlaws01"
         },
         "workspaceResourceGroup": {
             "value": "azure-paas-rg"
-        },
-        "azureSubscriptionId": {
-            "value": "b3989282-d7bd-4e6f-acc0-48b99d716c78"
         }
     }
 }
