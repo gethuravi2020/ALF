@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineTier": {
+            "value": "Standard"
+        },
+        "AppServicesTier": {
+            "value": "Standard"
+        },
+        "SqlServersTier": {
+            "value": "Standard"
+        },
+        "SqlServerVirtualMachines": {
+            "value": "Standard"
+        },
+        "OpenSourceRelationalDatabases": {
+            "value": "Standard"
+        },
+        "StorageAccounts": {
+            "value": "Standard"
+        },
+        "KeyVaults": {
+            "value": "Standard"
+        },
+        "Containers": {
+            "value": "Standard"
+        },
+        "Dns": {
+            "value": "Standard"
+        },
+        "Arm": {
+            "value": "Standard"
+        },
+        "autoProvision": {
+            "value": "On"
+        },
+        "eventHubnamespace": {
+            "value": "uks-az-evtns-p1"
+        },
+        "eventHub": {
+            "value": "uks-az-evthub-p1"
+        },
+        "eventhubpolicy": {
+            "value": "eventhubSAS"
+        },
+        "resourceGroupName": {
+            "value": "uks-dmz-prod-hub-rg"
+        },
+        "additionalEmailAddresses": {
+            "value": "CloudOps@everestre.com"
+        },
+        "minimalSeverity": {
+            "value": "Medium"
+        },
+        "notificationRole": {
+            "value": "Contributor"
+        },
+        "authorizationRulesNameeventhub": {
+            "value": "RootManageSharedAccessKey"
+        },
+        "workspaceName": {
+            "value": "uks-az-law-p1"
+        },
+        "workspaceResourceGroup": {
+            "value": "uks-dmz-prod-hub-rg"
+        },
+        "azureSubscriptionId": {
+            "value": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
+        }
+    }
+}
