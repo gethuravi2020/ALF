@@ -104,7 +104,10 @@
         },
         "resourceGroupName": {
             "type": "string",
-            "defaultValue":"testrg"
+            "defaultValue":"testrg",
+            "metadata": {
+                "description": "Specify the name of the resource group where Eventhub reside."
+            }
         },
         "additionalEmailAddresses": {
             "type": "string",
@@ -141,6 +144,20 @@
             "defaultValue": "0e6352b0-80fc-48b4-b362-88af9c692b6e",
             "metadata": {
                 "description": "Specify the Azure subscriptionId where the Log Analytics workspace is deployed."
+            }
+        },
+        "Localresourcegroup": {
+            "type": "string",
+            "defaultValue": "uks-core-prod-rg",
+            "metadata": {
+                "description": "Specify the local resource group when you are using this template for cross subscription deployment"
+            }
+        },
+        "LocationEventhub": {
+            "type": "string",
+            "defaultValue": "UK South",
+            "metadata": {
+                "description": "Specifiy the location of the Eventhub"
             }
         }     
     },
@@ -281,7 +298,7 @@
                         {
                             "tags": {},
                             "apiVersion": "2019-01-01-preview",
-                            "location": "UK South",
+                            "location": "[parameters('LocationEventhub')]",
                             "name": "exportToEventHub02",
                             "type": "Microsoft.Security/automations",
                             "dependsOn": [],
@@ -323,7 +340,7 @@
                     ]
                 }
             },
-            "resourceGroup": "uks-core-prod-rg"
+            "resourceGroup": "[parameters('Localresourcegroup')]"
         } ],
     "outputs":  {
         "nameResult": { 
