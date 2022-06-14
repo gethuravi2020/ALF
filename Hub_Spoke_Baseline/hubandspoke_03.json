@@ -1,0 +1,591 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dmzLocation": {
+            "type": "string",
+            "defaultValue": "UK South"
+        },
+        "drLocation": {
+            "type": "string",
+            "defaultValue": "Germany West Central"
+        },        
+        "hubSubscriptionId": {
+            "type": "string",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+        },
+        "coreSubscriptionId": {
+            "type": "string",
+            "defaultValue": "69f26762-afa0-46b5-8311-4fbdf35b3060"
+        },
+        "dmzhubvnetRg": {
+            "type": "string",
+            "defaultValue": "uks-dmz-prod-hub-rg"
+        },
+        "drhubvnetRg": {
+            "type": "string",
+            "defaultValue": "gwc-dmz-dr-hub-rg"
+        },
+        "coreprodvnetRg": {
+            "type": "string",
+            "defaultValue": "uks-core-prod-rg"
+        },
+        "drasrvnetRg": {
+            "type": "string",
+            "defaultValue": "gwc-dr-asr-rg"
+        },
+        "dmzhubvnetname": {
+            "type": "string",
+            "defaultValue": "uks-dmz-hub-vnet"
+        },
+        "drhubvnetname": {
+            "type": "string",
+            "defaultValue": "gwc-dr-hub-vnet"
+        },
+        "coreprodvnetname": {
+            "type": "string",
+            "defaultValue": "uks-core-prod-vnet"
+        },
+        "drasrvnetname": {
+            "type": "string",
+            "defaultValue": "gwc-dr-asr-vnet"
+        },
+        "diagnosticName": {
+            "type": "string",
+            "defaultValue":"diag"
+        },
+        "workspaceName": {
+            "type": "string",
+            "defaultValue":"uks-az-law-p1"
+        },
+        "workspaceResourceGroup": {
+            "type": "string",
+            "defaultValue": "uks-dmz-prod-hub-rg"
+        },
+        "workspaceSubscriptionID": {
+            "type": "string",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+        },
+        "tags": {
+            "type": "Object",
+            "defaultValue":{}
+        }
+    },
+    "functions": [],
+    "variables": {
+        "peering-name-ukshub-to-ukscore": "peering-ukshub-to-ukscore",
+        "peering-name-ukscore-to-ukshub": "peering-ukscore-to-ukshub",
+        "peering-name-ukshub-to-gwchub": "peering-ukshub-to-gwchub",
+        "peering-name-gwchub-to-ukshub": "peering-gwchub-to-ukshub",
+        "peering-name-ukscore-to-gwcasr": "peering-ukscore-to-gwcasr",
+        "peering-name-gwcasr-to-ukscore": "peering-gwcasr-to-ukscore",
+        "peering-name-gwchub-to-gwcasr": "peering-gwchub-to-gwasr",
+        "peering-name-gwcasr-to-gwchub": "peering-gwcasr-to-gwchub"
+    },
+    "resources": [
+    {
+        "name": "DmzHubVnetDeployment",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2021-04-01",
+        "subscriptionId":"[parameters('hubSubscriptionId')]",
+        "resourceGroup": "[parameters('dmzhubvnetRg')]",
+        "properties": {
+            "mode": "Incremental",
+            "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "variables": {},
+                "resources": [
+                    {
+                        "name": "[parameters('dmzhubvnetname')]",
+                        "type": "Microsoft.Network/virtualNetworks",
+                        "apiVersion": "2020-11-01",
+                        "location": "[parameters('dmzLocation')]",
+                        "tags": "[parameters('tags')]",
+                        "properties": {
+                            "addressSpace": {
+                                "addressPrefixes": [
+                                    "10.8.56.0/21"
+                                ]
+                            },
+                            "subnets": [
+                                {
+                                    "name": "GatewaySubnet",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.0/27"
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-sn01",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.32/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-mgmt-sn02",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.64/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-pa-trust-sn03",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.96/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-pa-untrust-sn04",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.128/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-pa-ha2-sn05",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.160/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-ics-internal-sn06",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.192/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-ics-external-sn07",
+                                    "properties": {
+                                        "addressPrefix": "10.8.56.224/27"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-ics-tunnel-sn08",
+                                    "properties": {
+                                        "addressPrefix": "10.8.58.0/23"                           
+                                    }
+                                },
+                                {
+                                    "name": "uks-dmz-hub-vnet-ics-tunnel-sn09",
+                                    "properties": {
+                                        "addressPrefix": "10.8.60.0/23"                           
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Microsoft.Network/virtualNetworks/providers/diagnosticSettings",
+                        "apiVersion": "2021-05-01-preview",
+                        "name": "[concat(parameters('dmzhubvnetname'), '/Microsoft.Insights/', parameters('diagnosticName'))]",
+                        "properties": {
+                            "workspaceId": "[concat('/subscriptions/', parameters('workspaceSubscriptionID'), '/resourceGroups/', parameters('workspaceResourceGroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]",                           
+                            "metrics": [
+                                {
+                                    "category": "AllMetrics",
+                                    "enabled": true
+                                }
+                            ],
+                            "logs":[
+                                {
+                                    "categoryGroup":"allLogs",
+                                    "enabled":true
+                                }
+                            ]
+                        }
+                    }                    
+                ],
+                "outputs": {}
+            }
+        }
+    },
+    {
+       "name": "DmzDrVnetDeployment",
+       "type": "Microsoft.Resources/deployments",
+       "apiVersion": "2021-04-01",
+       "subscriptionId":"[parameters('hubSubscriptionId')]",     
+       "resourceGroup":"[parameters('drhubvnetRg')]",
+       "properties": {
+           "mode": "Incremental",
+           "template": {
+               "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+               "contentVersion": "1.0.0.0",
+               "variables": {},
+               "resources": [
+                {
+                "name": "[parameters('drhubvnetname')]",
+                "type": "Microsoft.Network/virtualNetworks",
+                "apiVersion": "2020-11-01",
+                "location": "[parameters('drLocation')]",                    
+                "tags": "[parameters('tags')]",
+                "properties": {
+                    "addressSpace": {
+                        "addressPrefixes": [
+                            "10.8.120.0/21"
+                        ]
+                    },
+                    "subnets": [
+                        {
+                            "name": "GatewaySubnet",
+                            "properties": {
+                                "addressPrefix": "10.8.120.0/27"
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-sn01",
+                            "properties": {
+                                "addressPrefix": "10.8.120.32/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-mgmt-sn02",
+                            "properties": {
+                                "addressPrefix": "10.8.120.64/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-pa-trust-sn03",
+                            "properties": {
+                                "addressPrefix": "10.8.120.96/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-pa-untrust-sn04",
+                            "properties": {
+                                "addressPrefix": "10.8.120.128/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-ps-mgmt-sn05",
+                            "properties": {
+                                "addressPrefix": "10.8.120.160/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-ics-internal-sn06",
+                            "properties": {
+                                "addressPrefix": "10.8.120.192/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-ics-external-sn07",
+                            "properties": {
+                                "addressPrefix": "10.8.120.224/27"                           
+                            }
+                        },
+                        {
+                            "name": "gwc-dr-hub-vnet-ps-tunnel-sn08",
+                            "properties": {
+                                "addressPrefix": "10.8.122.0/23"                           
+                                    }
+                                }
+                            ]
+                        }
+                },
+                {
+                        "type": "Microsoft.Network/virtualNetworks/providers/diagnosticSettings",
+                        "apiVersion": "2021-05-01-preview",
+                        "name": "[concat(parameters('drhubvnetname'), '/Microsoft.Insights/', parameters('diagnosticName'))]",
+                        "properties": {
+                            "workspaceId": "[concat('/subscriptions/', parameters('workspaceSubscriptionID'), '/resourceGroups/', parameters('workspaceResourceGroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]",                           
+                            "metrics": [
+                                {
+                                    "category": "AllMetrics",
+                                    "enabled": true
+                                }
+                            ],
+                            "logs":[
+                                {
+                                    "categoryGroup":"allLogs",
+                                    "enabled":true
+                                }
+                            ]
+                        }
+                    }
+               ],
+               "outputs": {}
+           }
+       }
+   },
+   {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "CoreProdVnetDeployment",     
+            "subscriptionId": "[parameters('coreSubscriptionId')]",
+            "resourceGroup": "[parameters('coreprodvnetRg')]",
+            "tags":"[parameters('tags')]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [        
+                        {
+                            "name": "[parameters('coreprodvnetname')]",
+                            "type": "Microsoft.Network/virtualNetworks",
+                            "apiVersion": "2020-11-01",
+                            "location": "East US",                          
+                            "properties": {
+                                "addressSpace": {
+                                    "addressPrefixes": [
+                                        "10.8.0.0/22"
+                                    ]
+                                },
+                                "subnets": [
+                                    {
+                                        "name": "uks-core-prod-vnet-vm-sn01",
+                                        "properties": {
+                                            "addressPrefix": "10.8.0.0/24"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                        "type": "Microsoft.Network/virtualNetworks/providers/diagnosticSettings",
+                        "apiVersion": "2021-05-01-preview",
+                        "name": "[concat(parameters('coreprodvnetname'), '/Microsoft.Insights/', parameters('diagnosticName'))]",
+                        "properties": {
+                            "workspaceId": "[concat('/subscriptions/', parameters('workspaceSubscriptionID'), '/resourceGroups/', parameters('workspaceResourceGroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]",                           
+                            "metrics": [
+                                {
+                                    "category": "AllMetrics",
+                                    "enabled": true
+                                }
+                            ],
+                            "logs":[
+                                {
+                                    "categoryGroup":"allLogs",
+                                    "enabled":true
+                                }
+                            ]
+                        }
+                    }                        
+                     ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "DrAsrVnetDeplyoment",     
+            "subscriptionId": "[parameters('coreSubscriptionId')]",
+            "resourceGroup": "[parameters('drasrvnetRg')]",
+            "tags":"[parameters('tags')]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [            
+                        {
+                            "name": "[parameters('drasrvnetname')]",
+                            "type": "Microsoft.Network/virtualNetworks",
+                            "apiVersion": "2020-11-01",
+                            "location": "East US",                            
+                            "properties": {
+                                "addressSpace": {
+                                    "addressPrefixes": [
+                                        "10.8.64.0/22"
+                                    ]
+                                },
+                                "subnets": [
+                                    {
+                                        "name": "gwc-dr-asr-vnet-vm-sn01",
+                                        "properties": {
+                                            "addressPrefix": "10.8.64.0/24"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                        "type": "Microsoft.Network/virtualNetworks/providers/diagnosticSettings",
+                        "apiVersion": "2021-05-01-preview",
+                        "name": "[concat(parameters('drasrvnetname'), '/Microsoft.Insights/', parameters('diagnosticName'))]",
+                        "properties": {
+                            "workspaceId": "[concat('/subscriptions/', parameters('workspaceSubscriptionID'), '/resourceGroups/', parameters('workspaceResourceGroup'), '/providers/Microsoft.OperationalInsights/workspaces/', parameters('workspaceName'))]",                           
+                            "metrics": [
+                                {
+                                    "category": "AllMetrics",
+                                    "enabled": true
+                                }
+                            ],
+                            "logs":[
+                                {                                    
+                                    "categoryGroup":"allLogs",
+                                    "enabled":true
+                                }
+                            ]
+                        }
+                    }                       
+                    ]
+                }
+            }
+        },
+        {
+            "name": "nestedDeployment1",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "variables": {},
+                    "resources": [                                                
+                    {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "dependsOn": [
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]",
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]"
+                            ],
+                            "name": "[concat(parameters('dmzhubvnetname'), '/', variables('peering-name-ukshub-to-ukscore'))]",
+                            "apiVersion": "2018-08-01",
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,                                
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "dependsOn": [
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]",
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]"
+                            ],
+                            "name": "[concat(parameters('dmzhubvnetname'), '/', variables('peering-name-ukshub-to-gwchub'))]",
+                            "apiVersion": "2018-08-01",
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]"
+                                }
+                            }
+                        },                    
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "name": "[concat(parameters('drhubvnetname'), '/', variables('peering-name-gwchub-to-gwcasr'))]",
+                            "apiVersion": "2018-08-01",
+                            "dependsOn": [
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]",
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]"
+                            ],
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "name": "[concat(parameters('drhubvnetname'), '/', variables('peering-name-gwchub-to-ukshub'))]",
+                            "apiVersion": "2018-08-01",
+                            "dependsOn": [
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]",
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]"
+                            ],
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "name": "[concat(parameters('coreprodvnetname'), '/', variables('peering-name-ukscore-to-ukshub'))]",
+                            "apiVersion": "2018-08-01",
+                            "dependsOn": [
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]",
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]"
+                            ],
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "name": "[concat(parameters('coreprodvnetname'), '/', variables('peering-name-ukscore-to-gwcasr'))]",
+                            "apiVersion": "2018-08-01",
+                            "dependsOn": [
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]",
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]"
+                            ],
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]"
+                                }
+                            }
+                        }, 
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "name": "[concat(parameters('drasrvnetname'), '/', variables('peering-name-gwcasr-to-gwchub'))]",
+                            "apiVersion": "2018-08-01",
+                            "dependsOn": [
+                                 "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]",
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]"
+                            ],
+                            "properties": {
+                                "allowVirtualNetworkAccess": true,
+                                "allowForwardedTraffic": true,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                            "name": "[concat(parameters('drasrvnetname'), '/', variables('peering-name-gwcasr-to-ukscore'))]",
+                            "apiVersion": "2018-08-01",
+                            "dependsOn": [
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]",
+                                 "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]"
+                            ],                            
+                            "properties": {
+                                "allowVirtualNetworkAccess": false,
+                                "allowForwardedTraffic": false,
+                                "allowGatewayTransit": false,
+                                "useRemoteGateways": false,
+                                "remoteVirtualNetwork": {
+                                    "id": "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]"
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }    
+                    
+    ],
+    "outputs": {}
+}

@@ -1,0 +1,376 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "asg-uks-vm-file": {
+            "type": "string",
+            "defaultValue":"asg-ukcore-uks-adds"
+        },
+        "asg-uks-vm-adds": {
+            "type": "string",
+            "defaultValue":"asg-ukcore-uks-filesrv"
+        },
+        "asg-gwc-vm-file": {
+            "type": "string",
+            "defaultValue":"asg-ukcore-gwc-adds"
+        },
+        "asg-gwc-vm-adds": {
+            "type": "string",
+            "defaultValue":"asg-ukcore-gwc-filesrv"
+        },
+        "nsg-uks-vm-prod": {
+            "type": "string",
+            "defaultValue":"nsg-ukcore-uks-prod"
+        },
+        "nsg-gwc-vm-dr": {
+            "type": "string",
+            "defaultValue":"asg-ukcore-gwc-dr"
+        },
+        "rt-exphub-uks-hub-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-uks-hub-nva"
+        },
+        "rt-exphub-gwc-hub-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-gwc-hub-nva"
+        },
+        "rt-exphub-uks-er-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-uks-er-nva"
+        },
+        "rt-exphub-gwc-er-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-gwc-er-nva"
+        },
+        "rt-exphub-uks-vpn-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-uks-vpn-nva"
+        },
+        "rt-exphub-gwc-vpn-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-gwc-vpn-nva"
+        },
+        "rt-ukcore-uks-prod-nva": {
+            "type": "string",
+            "defaultValue":"rt-ukcore-uks-prod-nva"
+        },
+        "rt-ukcore-gwc-dr-nva": {
+            "type": "string",
+            "defaultValue":"rt-ukcore-gwc-dr-nva"
+        },
+        "spokeNetwork": {
+            "type": "object",
+            "defaultvalue": {                
+                "subnetnsgname": "spknsg001",
+                "addressprefixs": "10.0.0.0/20",
+                "routename": "route01"
+            }
+        },
+        "destination-ad-ports": {
+            "type": "array",
+            "defaultValue": [
+                "123",
+                "389",
+                "636",
+                "53",
+                "88",
+                "49192-65535"
+            ]
+        },        
+        "coreSubscriptionId": {
+            "type": "string",
+            "defaultValue": "69f26762-afa0-46b5-8311-4fbdf35b3060"
+        },
+        "coreprodvnetRg": {
+            "type": "string",
+            "defaultValue": "uks-core-prod-rg"
+        }
+    },
+           
+    "resources": [
+            {
+                "name": "applicationSecurityGroup1",
+                "type": "Microsoft.Network/applicationSecurityGroups",
+                "apiVersion": "2020-11-01",
+                "location": "[resourceGroup().location]",
+                "tags": {},
+                "properties": {}
+            }
+
+            {
+                "name": "[parameters('spokeNetwork').subnetnsgname]",
+                "type": "Microsoft.Network/networkSecurityGroups",
+                "apiVersion": "2020-11-01",
+                "location": "Germany West Central",
+                "properties": {
+                    "securityRules": [
+                        {
+                            "name": "Allow-RDP-Onprem",
+                            "properties": {
+                                "description": "description",
+                                "protocol": "*",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "3389",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 1001,
+                                "direction": "Inbound"
+                            }
+                        },
+                        {
+                            "name": "Allow-SSH-Onprem",
+                            "properties": {
+                                "description": "description",
+                                "protocol": "*",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "22",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 1002,
+                                "direction": "Inbound"
+                            }
+                        },
+                        {
+                            "name": "Allow-AD-Comms-Onprem-01",
+                            "properties": {
+                                "description": "description",
+                                "protocol": "*",
+                                "sourcePortRange": "*",
+                                "destinationPortRanges": "[parameters('destination-ad-ports')]",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 1003,
+                                "direction": "Inbound"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                    "name": "[parameters('spokeNetwork').routename]",
+                    "type": "Microsoft.Network/routeTables",
+                    "apiVersion": "2020-11-01",
+                    "location": "Germany West Central",
+                    "tags": {},
+                    "properties": {
+                        "routes": [
+                            {
+                                "name": "route001",
+                                "properties": {
+                                    "addressPrefix": "[parameters('spokeNetwork').addressprefixs]",
+                                    "nextHopType": "VirtualAppliance",
+                                    "nextHopIpAddress": "10.8.56.100"
+                                }
+                            }
+                        ],
+                        "disableBgpRoutePropagation": true
+                    }
+                },
+                {
+                    "name": "UKCore-NSG-RT-Deployment",
+                    "type": "Microsoft.Resources/deployments",
+                    "apiVersion": "2021-04-01",
+                    "subscriptionId": "[parameters('coreSubscriptionId')]",
+                    "resourceGroup": "[parameters('coreprodvnetRg')]",
+                    "properties": {
+                        "mode": "Incremental",
+                        "template": {
+                            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "variables": {},
+                            "resources": [
+                                {
+                                "name": "[parameters('spokeNetwork').subnetnsgname]",
+                                "type": "Microsoft.Network/networkSecurityGroups",
+                                "apiVersion": "2020-11-01",
+                                "location": "[resourceGroup().location]",
+                                "properties": {
+                                    "securityRules": [
+                                        {
+                                            "name": "Allow-RDP-Onprem",
+                                            "properties": {
+                                                "description": "description",
+                                                "protocol": "*",
+                                                "sourcePortRange": "*",
+                                                "destinationPortRange": "3389",
+                                                "sourceAddressPrefix": "*",
+                                                "destinationAddressPrefix": "*",
+                                                "access": "Allow",
+                                                "priority": 1001,
+                                                "direction": "Inbound"
+                                            }
+                                        },
+                                        {
+                                            "name": "Allow-SSH-Onprem",
+                                            "properties": {
+                                                "description": "description",
+                                                "protocol": "*",
+                                                "sourcePortRange": "*",
+                                                "destinationPortRange": "22",
+                                                "sourceAddressPrefix": "*",
+                                                "destinationAddressPrefix": "*",
+                                                "access": "Allow",
+                                                "priority": 1002,
+                                                "direction": "Inbound"
+                                            }
+                                        },
+                                        {
+                                            "name": "Allow-AD-Comms-Onprem-01",
+                                            "properties": {
+                                                "description": "description",
+                                                "protocol": "*",
+                                                "sourcePortRange": "*",
+                                                "destinationPortRanges": "[parameters('destination-ad-ports')]",
+                                                "sourceAddressPrefix": "*",
+                                                "destinationAddressPrefix": "*",
+                                                "access": "Allow",
+                                                "priority": 1003,
+                                                "direction": "Inbound"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                    "name": "[parameters('spokeNetwork').routename]",
+                                    "type": "Microsoft.Network/routeTables",
+                                    "apiVersion": "2020-11-01",
+                                    "location": "[resourceGroup().location]",
+                                    "tags": {},
+                                    "properties": {
+                                        "routes": [
+                                            {
+                                                "name": "route001",
+                                                "properties": {
+                                                    "addressPrefix": "[parameters('spokeNetwork').addressprefixs]",
+                                                    "nextHopType": "VirtualAppliance",
+                                                    "nextHopIpAddress": "10.8.56.100"
+                                                }
+                                            }
+                                        ],
+                                        "disableBgpRoutePropagation": true
+                                    }
+                                }
+                            ],
+                            "outputs": {}
+                        }
+                    }
+                },
+                {
+                    "name": "[parameters('spokeNetwork').routename]",
+                    "type": "Microsoft.Network/routeTables",
+                    "apiVersion": "2020-11-01",
+                    "location": "East US",
+                    "tags": {},
+                    "properties": {
+                        "routes": [
+                            {
+                                "name": "route001",
+                                "properties": {
+                                    "addressPrefix": "[parameters('spokeNetwork').addressprefixs]",
+                                    "nextHopType": "VirtualAppliance",
+                                    "nextHopIpAddress": "10.8.56.100"
+                                }
+                            }
+                        ],
+                        "disableBgpRoutePropagation": true
+                    }
+                },
+                {
+                    "name": "UKCore-NSG-RT-Deployment",
+                    "type": "Microsoft.Resources/deployments",
+                    "apiVersion": "2021-04-01",
+                    "subscriptionId": "[parameters('coreSubscriptionId')]",
+                    "resourceGroup": "[parameters('coreprodvnetRg')]",
+                    "properties": {
+                        "mode": "Incremental",
+                        "template": {
+                            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "variables": {},
+                            "resources": [
+                                {
+                                "name": "[parameters('spokeNetwork').subnetnsgname]",
+                                "type": "Microsoft.Network/networkSecurityGroups",
+                                "apiVersion": "2020-11-01",
+                                "location": "[resourceGroup().location]",
+                                "properties": {
+                                    "securityRules": [
+                                        {
+                                            "name": "Allow-RDP-Onprem",
+                                            "properties": {
+                                                "description": "description",
+                                                "protocol": "*",
+                                                "sourcePortRange": "*",
+                                                "destinationPortRange": "3389",
+                                                "sourceAddressPrefix": "*",
+                                                "destinationAddressPrefix": "*",
+                                                "access": "Allow",
+                                                "priority": 1001,
+                                                "direction": "Inbound"
+                                            }
+                                        },
+                                        {
+                                            "name": "Allow-SSH-Onprem",
+                                            "properties": {
+                                                "description": "description",
+                                                "protocol": "*",
+                                                "sourcePortRange": "*",
+                                                "destinationPortRange": "22",
+                                                "sourceAddressPrefix": "*",
+                                                "destinationAddressPrefix": "*",
+                                                "access": "Allow",
+                                                "priority": 1002,
+                                                "direction": "Inbound"
+                                            }
+                                        },
+                                        {
+                                            "name": "Allow-AD-Comms-Onprem-01",
+                                            "properties": {
+                                                "description": "description",
+                                                "protocol": "*",
+                                                "sourcePortRange": "*",
+                                                "destinationPortRanges": "[parameters('destination-ad-ports')]",
+                                                "sourceAddressPrefix": "*",
+                                                "destinationAddressPrefix": "*",
+                                                "access": "Allow",
+                                                "priority": 1003,
+                                                "direction": "Inbound"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                    "name": "[parameters('spokeNetwork').routename]",
+                                    "type": "Microsoft.Network/routeTables",
+                                    "apiVersion": "2020-11-01",
+                                    "location": "[resourceGroup().location]",
+                                    "tags": {},
+                                    "properties": {
+                                        "routes": [
+                                            {
+                                                "name": "route001",
+                                                "properties": {
+                                                    "addressPrefix": "[parameters('spokeNetwork').addressprefixs]",
+                                                    "nextHopType": "VirtualAppliance",
+                                                    "nextHopIpAddress": "10.8.56.100"
+                                                }
+                                            }
+                                        ],
+                                        "disableBgpRoutePropagation": true
+                                    }
+                                }
+                            ],
+                            "outputs": {}
+                        }
+                    }
+                }
+
+
+        ]
+        }
+          
