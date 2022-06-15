@@ -12,11 +12,11 @@
         },        
         "hubSubscriptionId": {
             "type": "string",
-            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+            "defaultValue": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
         },
         "coreSubscriptionId": {
             "type": "string",
-            "defaultValue": "69f26762-afa0-46b5-8311-4fbdf35b3060"
+            "defaultValue": "5837ab01-68c3-4fd7-9c86-b8bcef2c02f0"
         },
         "dmzhubvnetRg": {
             "type": "string",
@@ -49,10 +49,6 @@
         "drasrvnetname": {
             "type": "string",
             "defaultValue": "gwc-dr-asr-vnet"
-        },
-        "diagnosticName": {
-            "type": "string",
-            "defaultValue":"diag"
         },
         "uks-prod-core-nsg-name": {
             "type": "string",
@@ -88,7 +84,7 @@
         },
         "workspaceName": {
             "type": "string",
-            "defaultValue":"uks-az-law-p4"
+            "defaultValue":"uks-az-law-p1"
         },
         "workspaceResourceGroup": {
             "type": "string",
@@ -96,11 +92,19 @@
         },
         "workspaceSubscriptionID": {
             "type": "string",
-            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+            "defaultValue": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
         },
-        "tags": {
-            "type": "Object",
-            "defaultValue":{}
+        "storageAccountName": {
+            "type": "string",
+            "defaultValue":"lonhubukssadiag"
+        },
+        "tags-prod": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "tags-dr": {
+            "type": "object",
+            "defaultValue": {}
         }
     },
     "functions": [],
@@ -121,6 +125,7 @@
         "apiVersion": "2021-04-01",
         "subscriptionId":"[parameters('hubSubscriptionId')]",
         "resourceGroup": "[parameters('dmzhubvnetRg')]",
+        "tags": "[parameters('tags-prod')]",
         "properties": {
             "mode": "Incremental",
             "template": {
@@ -133,7 +138,7 @@
                         "type": "Microsoft.Network/virtualNetworks",
                         "apiVersion": "2020-11-01",
                         "location": "[parameters('dmzLocation')]",                       
-                        "tags": "[parameters('tags')]",
+                        "tags": "[parameters('tags-prod')]",
                         "properties": {
                             "addressSpace": {
                                 "addressPrefixes": [
@@ -263,15 +268,20 @@
                         "apiVersion": "2020-10-01",
                         "kind": "AzurePowerShell",
                         "name": "WaitSection",
+                        "tags":"[parameters('tags-prod')]",
                         "location": "[parameters('dmzLocation')]",
                         "dependsOn": [
                             "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('dmzhubvnetname'))]"
                         ],
                         "properties": {
                             "azPowerShellVersion": "3.0",
-                            "scriptContent": "start-sleep -Seconds 10",
+                            "scriptContent": "start-sleep -Seconds 15",
                             "cleanupPreference": "Always",
-                            "retentionInterval": "PT1H"
+                            "retentionInterval": "PT1H",
+                            "storageAccountSettings": {
+                                "storageAccountName": "[parameters('storageAccountName')]",
+                                "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                            }
                         }
                     },
                     {
@@ -336,6 +346,7 @@
        "apiVersion": "2021-04-01",
        "subscriptionId":"[parameters('hubSubscriptionId')]",     
        "resourceGroup":"[parameters('drhubvnetRg')]",
+       "tags":"[parameters('tags-dr')]",
        "properties": {
            "mode": "Incremental",
            "template": {
@@ -348,7 +359,7 @@
                 "type": "Microsoft.Network/virtualNetworks",
                 "apiVersion": "2020-11-01",
                 "location": "[parameters('drLocation')]",                    
-                "tags": "[parameters('tags')]",
+                "tags": "[parameters('tags-dr')]",
                 "properties": {
                     "addressSpace": {
                         "addressPrefixes": [
@@ -407,7 +418,7 @@
                                             "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/networkSecurityGroups',parameters('gwc-dr-hub-nsg-name'))]"
                                         },
                                         "routeTable":{
-                                            "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/routeTables',parameters('rt-exphub-uks-hub-nva'))]"
+                                            "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/routeTables',parameters('rt-exphub-gwc-hub-nva'))]"
                                         }                            
                             }
                         },
@@ -455,7 +466,7 @@
                                             "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/networkSecurityGroups',parameters('gwc-dr-hub-nsg-name'))]"
                                         },
                                         "routeTable":{
-                                            "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/routeTables',parameters('rt-exphub-uks-hub-nva'))]"
+                                            "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/routeTables',parameters('rt-exphub-gwc-hub-nva'))]"
                                         }                           
                                     }
                                 }
@@ -468,14 +479,19 @@
                         "kind": "AzurePowerShell",
                         "name": "WaitSection",
                         "location": "[parameters('drLocation')]",
+                        "tags":"[parameters('tags-dr')]",
                         "dependsOn": [
                             "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drhubvnetname'))]"
                         ],
                         "properties": {
                             "azPowerShellVersion": "3.0",
-                            "scriptContent": "start-sleep -Seconds 10",
+                            "scriptContent": "start-sleep -Seconds 15",
                             "cleanupPreference": "Always",
-                            "retentionInterval": "PT1H"
+                            "retentionInterval": "PT1H",
+                            "storageAccountSettings": {
+                                "storageAccountName": "[parameters('storageAccountName')]",
+                                "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                            }
                         }
                     },
                     {
@@ -541,7 +557,7 @@
             "name": "CoreProdVnetDeployment",     
             "subscriptionId": "[parameters('coreSubscriptionId')]",
             "resourceGroup": "[parameters('coreprodvnetRg')]",
-            "tags":"[parameters('tags')]",
+            "tags":"[parameters('tags-prod')]",
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -554,7 +570,8 @@
                             "name": "[parameters('coreprodvnetname')]",
                             "type": "Microsoft.Network/virtualNetworks",
                             "apiVersion": "2020-11-01",
-                            "location": "[parameters('dmzLocation')]",                          
+                            "location": "[parameters('dmzLocation')]",
+                            "tags":"[parameters('tags-prod')]",                          
                             "properties": {
                                 "addressSpace": {
                                     "addressPrefixes": [
@@ -606,15 +623,20 @@
                         "apiVersion": "2020-10-01",
                         "kind": "AzurePowerShell",
                         "name": "WaitSection",
+                        "tags":"[parameters('tags-prod')]",
                         "location": "[parameters('dmzLocation')]",
                         "dependsOn": [
                             "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('coreprodvnetname'))]"
                         ],
                         "properties": {
                             "azPowerShellVersion": "3.0",
-                            "scriptContent": "start-sleep -Seconds 10",
+                            "scriptContent": "start-sleep -Seconds 15",
                             "cleanupPreference": "Always",
-                            "retentionInterval": "PT1H"
+                            "retentionInterval": "PT1H",
+                            "storageAccountSettings": {
+                                "storageAccountName": "[parameters('storageAccountName')]",
+                                "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                                }
                             }
                         },
                         {
@@ -679,7 +701,7 @@
             "name": "DrAsrVnetDeplyoment",     
             "subscriptionId": "[parameters('coreSubscriptionId')]",
             "resourceGroup": "[parameters('drasrvnetRg')]",
-            "tags":"[parameters('tags')]",
+            "tags":"[parameters('tags-dr')]",
             "properties": {
                 "mode": "Incremental",
                 "template": {
@@ -692,7 +714,8 @@
                             "name": "[parameters('drasrvnetname')]",
                             "type": "Microsoft.Network/virtualNetworks",
                             "apiVersion": "2020-11-01",
-                            "location": "[parameters('drLocation')]",                            
+                            "location": "[parameters('drLocation')]",
+                            "tags":"[parameters('tags-dr')]",                            
                             "properties": {
                                 "addressSpace": {
                                     "addressPrefixes": [
@@ -721,14 +744,19 @@
                         "kind": "AzurePowerShell",
                         "name": "WaitSection",
                         "location": "[parameters('drLocation')]",
+                        "tags":"[parameters('tags-dr')]",
                         "dependsOn": [
                             "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/virtualNetworks',parameters('drasrvnetname'))]"
                         ],
                         "properties": {
                             "azPowerShellVersion": "3.0",
-                            "scriptContent": "start-sleep -Seconds 10",
+                            "scriptContent": "start-sleep -Seconds 15",
                             "cleanupPreference": "Always",
-                            "retentionInterval": "PT1H"
+                            "retentionInterval": "PT1H",
+                            "storageAccountSettings": {
+                                "storageAccountName": "[parameters('storageAccountName')]",
+                                "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                                }
                             }
                         },
                         {

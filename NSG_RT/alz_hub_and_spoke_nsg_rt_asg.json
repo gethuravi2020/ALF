@@ -18,13 +18,21 @@
             "type": "string",
             "defaultValue":"asg-ukcore-gwc-filesrv"
         },
-        "nsg-uks-vm-prod": {
+        "uks-prod-core-nsg-name": {
             "type": "string",
-            "defaultValue":"nsg-ukcore-uks-prod"
+            "defaultValue":"uks-prod-core-nsg"
         },
-        "nsg-gwc-vm-dr": {
+        "gwc-dr-asr-nsg-name": {
             "type": "string",
-            "defaultValue":"nsg-ukcore-gwc-dr"
+            "defaultValue":"gwc-dr-asr-nsg"
+        },
+        "uks-dmz-hub-nsg-name": {
+            "type": "string",
+            "defaultValue":"uks-dmz-hub-nsg"
+        },
+        "gwc-dr-hub-nsg-name": {
+            "type": "string",
+            "defaultValue":"gwc-dr-hub-nsg"
         },
         "rt-exphub-uks-hub-nva": {
             "type": "string",
@@ -34,37 +42,21 @@
             "type": "string",
             "defaultValue":"rt-exphub-gwc-hub-nva"
         },
-        "rt-exphub-uks-er-nva": {
+        "rt-ukcore-uks-prod": {
             "type": "string",
-            "defaultValue":"rt-exphub-uks-er-nva"
+            "defaultValue":"rt-ukcore-uks-prod"
         },
-        "rt-exphub-gwc-er-nva": {
+        "rt-ukcore-gwc-dr": {
             "type": "string",
-            "defaultValue":"rt-exphub-gwc-er-nva"
-        },
-        "rt-exphub-uks-vpn-internal": {
-            "type": "string",
-            "defaultValue":"rt-exphub-uks-vpn-internal"
-        },
-        "rt-exphub-gwc-vpn-internal": {
-            "type": "string",
-            "defaultValue":"rt-exphub-gwc-vpn-internal"
-        },
-        "rt-ukcore-uks-prod-nva": {
-            "type": "string",
-            "defaultValue":"rt-ukcore-uks-prod-nva"
-        },
-        "rt-ukcore-gwc-dr-nva": {
-            "type": "string",
-            "defaultValue":"rt-ukcore-gwc-dr-nva"
+            "defaultValue":"rt-ukcore-gwc-dr"
         },        
         "coreSubscriptionId": {
             "type": "string",
-            "defaultValue": "69f26762-afa0-46b5-8311-4fbdf35b3060"
+            "defaultValue": "5837ab01-68c3-4fd7-9c86-b8bcef2c02f0"
         },
         "hubSubscriptionId": {
             "type": "string",
-            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+            "defaultValue": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
         },
         "dmzhubvnetRg": {
             "type": "string",
@@ -81,6 +73,30 @@
         "drasrvnetRg": {
             "type": "string",
             "defaultValue": "gwc-dr-asr-rg"
+        },
+        "workspaceName": {
+            "type": "string",
+            "defaultValue":"uks-az-law-p1"
+        },
+        "workspaceResourceGroup": {
+            "type": "string",
+            "defaultValue": "uks-dmz-prod-hub-rg"
+        },
+        "workspaceSubscriptionID": {
+            "type": "string",
+            "defaultValue": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
+        },
+        "storageAccountName": {
+            "type": "string",
+            "defaultValue":"lonhubukssadiag"
+        },
+        "tags-prod": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "tags-dr": {
+            "type": "object",
+            "defaultValue": {}
         }
     },           
     "resources": [
@@ -90,75 +106,20 @@
                 "apiVersion": "2021-04-01",
                 "subscriptionId":"[parameters('hubSubscriptionId')]",
                 "resourceGroup": "[parameters('dmzhubvnetRg')]",
+                "tags": "[parameters('tags-prod')]",
                 "properties": {
                     "mode": "Incremental",
                     "template": {
                         "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
                         "contentVersion": "1.0.0.0",
                         "variables": {},
-                        "resources": [
-                            {
-                                "name": "[parameters('rt-exphub-uks-er-nva')]",
-                                "type": "Microsoft.Network/routeTables",
-                                "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
-                                "properties": {
-                                    "routes": [
-                                        {
-                                            "name": "route-exproute-gw-to-pa-nva-01",
-                                            "properties": {
-                                                "addressPrefix": "10.8.0.0/21",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.32.102"
-                                            }
-                                        },
-                                        {
-                                            "name": "route-exproute-gw-to-pa-nva-02",
-                                            "properties": {
-                                                "addressPrefix": "10.8.32.0/19",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.32.102"
-                                            }
-                                        }
-                                    ],
-                                    "disableBgpRoutePropagation": false
-                                }
-                            },
-                            {
-                                "name": "[parameters('rt-exphub-uks-vpn-internal')]",
-                                "type": "Microsoft.Network/routeTables",
-                                "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
-                                "properties": {
-                                    "routes": [
-                                        {
-                                            "name": "route-vpn-tunnel-to-ps-internal-01",
-                                            "properties": {
-                                                "addressPrefix": "10.8.36.0/22",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.32.196"
-                                            }
-                                        },
-                                        {
-                                            "name": "route-vpn-tunnel-to-ps-internal-02",
-                                            "properties": {
-                                                "addressPrefix": "10.8.40.0/22",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.32.197"
-                                            }
-                                        }
-                                    ],
-                                    "disableBgpRoutePropagation": true
-                                }
-                            },
+                        "resources": [                         
                             {
                                 "name": "[parameters('rt-exphub-uks-hub-nva')]",
                                 "type": "Microsoft.Network/routeTables",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "UK South",
+                                "tags": "[parameters('tags-prod')]",                                
                                 "properties": {
                                     "routes": [
                                         {
@@ -174,10 +135,11 @@
                                 }
                             },
                             {
-                                "name": "uks-dmz-hub-vnet-nsg",
+                                "name": "[parameters('uks-dmz-hub-nsg-name')]",
                                 "type": "Microsoft.Network/networkSecurityGroups",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
+                                "location": "UK South",
+                                "tags": "[parameters('tags-prod')]",
                                 "properties": {
                                     "securityRules": [
                                         {
@@ -196,6 +158,43 @@
                                                 "priority": 1010,
                                                 "direction": "Inbound"
                                             }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Resources/deploymentScripts",
+                                "apiVersion": "2020-10-01",
+                                "kind": "AzurePowerShell",
+                                "name": "WaitSection",
+                                "tags": "[parameters('tags-prod')]",
+                                "dependsOn": [
+                                    "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/networkSecurityGroups',parameters('uks-dmz-hub-nsg-name'))]"
+                                ],
+                                "location": "UK South",                                
+                                "properties": {
+                                    "azPowerShellVersion": "3.0",
+                                    "scriptContent": "start-sleep -Seconds 15",
+                                    "cleanupPreference": "Always",
+                                    "retentionInterval": "PT1H",
+                                    "storageAccountSettings": {
+                                        "storageAccountName": "[parameters('storageAccountName')]",
+                                        "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Network/networkSecurityGroups/providers/diagnosticSettings",
+                                "apiVersion": "2021-05-01-preview",                                
+                                "name": "[concat(parameters('uks-dmz-hub-nsg-name'), '/Microsoft.Insights/', parameters('uks-dmz-hub-nsg-name'),'-diagnostics')]",
+                                "dependsOn":["WaitSection"],
+                                "tags": "[parameters('tags-prod')]",
+                                "properties": {
+                                    "workspaceId": "[resourceId(parameters('workspaceSubscriptionID'), parameters('workspaceResourceGroup'),'Microsoft.OperationalInsights/workspaces', parameters('WorkspaceName'))]",
+                                    "logs":[
+                                        {
+                                            "categoryGroup":"allLogs",
+                                            "enabled":true
                                         }
                                     ]
                                 }
@@ -211,67 +210,20 @@
                 "apiVersion": "2021-04-01",
                 "subscriptionId":"[parameters('hubSubscriptionId')]",
                 "resourceGroup": "[parameters('drhubvnetRg')]",
+                "tags": "[parameters('tags-dr')]",
                 "properties": {
                     "mode": "Incremental",
                     "template": {
                         "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
                         "contentVersion": "1.0.0.0",
                         "variables": {},
-                        "resources": [
-                            {
-                                "name": "[parameters('rt-exphub-gwc-er-nva')]",
-                                "type": "Microsoft.Network/routeTables",
-                                "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
-                                "properties": {
-                                    "routes": [
-                                        {
-                                            "name": "route-exproute-gw-to-pa-nva-01",
-                                            "properties": {
-                                                "addressPrefix": "10.8.64.0/21",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.96.100"
-                                            }
-                                        },
-                                        {
-                                            "name": "route-exproute-gw-to-pa-nva-02",
-                                            "properties": {
-                                                "addressPrefix": "10.8.96.0/19",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.96.100"
-                                            }
-                                        }
-                                    ],
-                                    "disableBgpRoutePropagation": false
-                                }
-                            },
-                            {
-                                "name": "[parameters('rt-exphub-gwc-vpn-internal')]",
-                                "type": "Microsoft.Network/routeTables",
-                                "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
-                                "properties": {
-                                    "routes": [
-                                        {
-                                            "name": "route-vpn-tunnel-to-ps-internal-01",
-                                            "properties": {
-                                                "addressPrefix": "10.8.100.0/22",
-                                                "nextHopType": "VirtualAppliance",
-                                                "nextHopIpAddress": "10.8.96.196"
-                                            }
-                                        }
-                                    ],
-                                    "disableBgpRoutePropagation": true
-                                }
-                            },
+                        "resources": [                           
                             {
                                 "name": "[parameters('rt-exphub-gwc-hub-nva')]",
                                 "type": "Microsoft.Network/routeTables",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "Germany West Central",
+                                "tags": "[parameters('tags-dr')]",
                                 "properties": {
                                     "routes": [
                                         {
@@ -287,10 +239,11 @@
                                 }
                             },
                             {
-                                "name": "gwc-dr-hub-vnet-nsg",
+                                "name": "[parameters('gwc-dr-hub-nsg-name')]",
                                 "type": "Microsoft.Network/networkSecurityGroups",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
+                                "location": "Germany West Central",
+                                "tags": "[parameters('tags-dr')]",
                                 "properties": {
                                     "securityRules": [
                                         {
@@ -312,6 +265,43 @@
                                         }
                                     ]
                                 }
+                            },
+                            {
+                                "type": "Microsoft.Resources/deploymentScripts",
+                                "apiVersion": "2020-10-01",
+                                "kind": "AzurePowerShell",
+                                "tags": "[parameters('tags-dr')]",
+                                "name": "WaitSection",
+                                "location": "Germany West Central",
+                                "dependsOn": [
+                                    "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/networkSecurityGroups',parameters('gwc-dr-hub-nsg-name'))]"
+                                ],
+                                "properties": {
+                                    "azPowerShellVersion": "3.0",
+                                    "scriptContent": "start-sleep -Seconds 15",
+                                    "cleanupPreference": "Always",
+                                    "retentionInterval": "PT1H",
+                                    "storageAccountSettings": {
+                                        "storageAccountName": "[parameters('storageAccountName')]",
+                                        "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Network/networkSecurityGroups/providers/diagnosticSettings",
+                                "apiVersion": "2021-05-01-preview",
+                                "name": "[concat(parameters('gwc-dr-hub-nsg-name'), '/Microsoft.Insights/', parameters('gwc-dr-hub-nsg-name'),'-diagnostics')]",
+                                "tags": "[parameters('tags-dr')]",
+                                "dependsOn":["WaitSection"],
+                                "properties": {
+                                    "workspaceId": "[resourceId(parameters('workspaceSubscriptionID'), parameters('workspaceResourceGroup'),'Microsoft.OperationalInsights/workspaces', parameters('WorkspaceName'))]",
+                                    "logs":[
+                                        {
+                                            "categoryGroup":"allLogs",
+                                            "enabled":true
+                                        }
+                                    ]
+                                }
                             }
                         ],
                         "outputs": {}
@@ -324,6 +314,7 @@
                 "apiVersion": "2021-04-01",
                 "subscriptionId":"[parameters('coreSubscriptionId')]",
                 "resourceGroup":"[parameters('coreprodvnetRg')]",
+                "tags": "[parameters('tags-prod')]",
                 "properties": {
                     "mode": "Incremental",
                     "template": {
@@ -335,33 +326,34 @@
                                 "name": "[parameters('asg-uks-vm-adds')]",
                                 "type": "Microsoft.Network/applicationSecurityGroups",
                                 "apiVersion": "2020-11-01",                                
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "UK South",
+                                "tags": "[parameters('tags-prod')]",
                                 "properties": {}
                             },
                             {
                                 "name": "[parameters('asg-uks-vm-file')]",
                                 "type": "Microsoft.Network/applicationSecurityGroups",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "UK South",
+                                "tags": "[parameters('tags-prod')]",
                                 "properties": {}
                             },
                             {
-                                "name": "[parameters('nsg-uks-vm-prod')]",
+                                "name": "[parameters('uks-prod-core-nsg-name')]",
                                 "type": "Microsoft.Network/networkSecurityGroups",
                                 "apiVersion": "2020-11-01",
+                                "tags": "[parameters('tags-prod')]",
                                 "dependsOn": [
                                     "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/applicationSecurityGroups', parameters('asg-uks-vm-adds'))]",
                                     "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/applicationSecurityGroups', parameters('asg-uks-vm-file'))]"
                                 ],
-                                "location": "[resourceGroup().location]",
+                                "location": "UK South",
                                 "properties": {
                                     "securityRules": [
                                         {
                                             "name": "Allow-RDP-FileSrv-Onprem",
                                             "properties": {
-                                                "description": "description",
+                                                "description": "Allow-RDP-FileSrv-Onprem",
                                                 "protocol": "*",
                                                 "sourcePortRange": "*",
                                                 "destinationPortRange":"3389",
@@ -382,7 +374,7 @@
                                         {
                                             "name": "Allow-SMB-FileSrv-Onprem",
                                             "properties": {
-                                                "description": "description",
+                                                "description": "Allow-SMB-FileSrv-Onprem",
                                                 "protocol": "*",
                                                 "sourcePortRange": "*",
                                                 "destinationPortRange":"445",
@@ -403,7 +395,7 @@
                                         {
                                             "name": "Allow-ADDS-Mgmt-Onprem",
                                             "properties": {
-                                                "description": "description",
+                                                "description": "Allow-ADDS-Mgmt-Onprem",
                                                 "protocol": "*",
                                                 "sourcePortRange": "*",
                                                 "DestinationPortRanges": [
@@ -438,13 +430,66 @@
                                 }
                             },
                             {
-                                "name": "[parameters('rt-ukcore-uks-prod-nva')]",
+                                "type": "Microsoft.Resources/deploymentScripts",
+                                "apiVersion": "2020-10-01",
+                                "kind": "AzurePowerShell",
+                                "tags": "[parameters('tags-prod')]",
+                                "name": "WaitSection",
+                                "location": "UK South",
+                                "dependsOn": [
+                                    "[resourceId(parameters('coreSubscriptionId'), parameters('coreprodvnetRg'), 'Microsoft.Network/networkSecurityGroups', parameters('uks-prod-core-nsg-name'))]"
+                                ],
+                                "properties": {
+                                    "azPowerShellVersion": "3.0",
+                                    "scriptContent": "start-sleep -Seconds 15",
+                                    "cleanupPreference": "Always",
+                                    "retentionInterval": "PT1H",
+                                    "storageAccountSettings": {
+                                        "storageAccountName": "[parameters('storageAccountName')]",
+                                        "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                                    }
+                                }
+                            },                            
+                            {
+                                "type": "Microsoft.Network/networkSecurityGroups/providers/diagnosticSettings",
+                                "apiVersion": "2021-05-01-preview",
+                                "name": "[concat(parameters('uks-prod-core-nsg-name'), '/Microsoft.Insights/', parameters('uks-prod-core-nsg-name'),'-diagnostics')]",
+                                "tags": "[parameters('tags-prod')]",
+                                "dependsOn":["WaitSection"],
+                                "properties": {
+                                    "workspaceId": "[resourceId(parameters('workspaceSubscriptionID'), parameters('workspaceResourceGroup'),'Microsoft.OperationalInsights/workspaces', parameters('WorkspaceName'))]",
+                                    "logs":[
+                                        {
+                                            "categoryGroup":"allLogs",
+                                            "enabled":true
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "[parameters('rt-ukcore-uks-prod')]",
                                 "type": "Microsoft.Network/routeTables",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "UK South",
+                                "tags": "[parameters('tags-prod')]",
                                 "properties": {
                                     "routes": [
+                                        {
+                                            "name": "route-vpn-tunnel-to-ps-internal-01",
+                                            "properties": {
+                                                "addressPrefix": "10.8.36.0/22",
+                                                "nextHopType": "VirtualAppliance",
+                                                "nextHopIpAddress": "10.8.32.196"
+                                            }
+                                        },
+                                        {
+                                            "name": "route-vpn-tunnel-to-ps-internal-02",
+                                            "properties": {
+                                                "addressPrefix": "10.8.40.0/22",
+                                                "nextHopType": "VirtualAppliance",
+                                                "nextHopIpAddress": "10.8.32.197"
+                                            }
+                                        },
                                         {
                                             "name": "route-prod-core-to-pa-nva",
                                             "properties": {
@@ -468,6 +513,7 @@
                 "apiVersion": "2021-04-01",
                 "subscriptionId":"[parameters('coreSubscriptionId')]",
                 "resourceGroup":"[parameters('drasrvnetRg')]",
+                "tags": "[parameters('tags-dr')]",
                 "properties": {
                     "mode": "Incremental",
                     "template": {
@@ -479,33 +525,34 @@
                                 "name": "[parameters('asg-gwc-vm-adds')]",
                                 "type": "Microsoft.Network/applicationSecurityGroups",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "Germany West Central",
+                                "tags": "[parameters('tags-dr')]",
                                 "properties": {}
                             },
                             {
                                 "name": "[parameters('asg-gwc-vm-file')]",
                                 "type": "Microsoft.Network/applicationSecurityGroups",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "Germany West Central",
+                                "tags": "[parameters('tags-dr')]",
                                 "properties": {}
                             },
                             {
-                                "name": "[parameters('nsg-gwc-vm-dr')]",
+                                "name": "[parameters('gwc-dr-asr-nsg-name')]",
                                 "type": "Microsoft.Network/networkSecurityGroups",
                                 "apiVersion": "2020-11-01",
+                                "tags": "[parameters('tags-dr')]",
                                 "dependsOn": [
                                     "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/applicationSecurityGroups', parameters('asg-gwc-vm-adds'))]",
                                     "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/applicationSecurityGroups', parameters('asg-gwc-vm-file'))]"
                                 ],
-                                "location": "[resourceGroup().location]",
+                                "location": "Germany West Central",
                                 "properties": {
                                     "securityRules": [
                                         {
                                             "name": "Allow-RDP-FileSrv-Onprem",
                                             "properties": {
-                                                "description": "description",
+                                                "description": "Allow-RDP-FileSrv-Onprem",
                                                 "protocol": "*",
                                                 "sourcePortRange": "*",
                                                 "destinationPortRange":"3389",
@@ -526,7 +573,7 @@
                                         {
                                             "name": "Allow-SMB-FileSrv-Onprem",
                                             "properties": {
-                                                "description": "description",
+                                                "description": "Allow-SMB-FileSrv-Onprem",
                                                 "protocol": "*",
                                                 "sourcePortRange": "*",
                                                 "destinationPortRange":"445",
@@ -547,7 +594,7 @@
                                         {
                                             "name": "Allow-ADDS-Mgmt-Onprem",
                                             "properties": {
-                                                "description": "description",
+                                                "description": "Allow-ADDS-Mgmt-Onprem",
                                                 "protocol": "*",
                                                 "sourcePortRange": "*",
                                                 "destinationPortRanges": [
@@ -582,13 +629,59 @@
                                 }
                             },
                             {
-                                "name": "[parameters('rt-ukcore-gwc-dr-nva')]",
+                                "type": "Microsoft.Resources/deploymentScripts",
+                                "apiVersion": "2020-10-01",
+                                "kind": "AzurePowerShell",
+                                "tags": "[parameters('tags-dr')]",
+                                "name": "WaitSection",
+                                "location": "Germany West Central",
+                                "dependsOn": [
+                                    "[resourceId(parameters('coreSubscriptionId'), parameters('drasrvnetRg'), 'Microsoft.Network/networkSecurityGroups', parameters('gwc-dr-asr-nsg-name'))]"
+                                ],
+                                "properties": {
+                                    "azPowerShellVersion": "3.0",
+                                    "scriptContent": "start-sleep -Seconds 15",
+                                    "cleanupPreference": "Always",
+                                    "retentionInterval": "PT1H",
+                                    "storageAccountSettings": {
+                                        "storageAccountName": "[parameters('storageAccountName')]",
+                                        "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value]"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Network/networkSecurityGroups/providers/diagnosticSettings",
+                                "apiVersion": "2021-05-01-preview",
+                                "location":"Germany West Central",
+                                "tags": "[parameters('tags-dr')]",
+                                "name": "[concat(parameters('gwc-dr-asr-nsg-name'), '/Microsoft.Insights/', parameters('gwc-dr-asr-nsg-name'), '-diagnostics')]",
+                                "dependsOn":["WaitSection"],
+                                "properties": {
+                                    "workspaceId": "[resourceId(parameters('workspaceSubscriptionID'), parameters('workspaceResourceGroup'),'Microsoft.OperationalInsights/workspaces', parameters('WorkspaceName'))]",
+                                    "logs":[
+                                        {
+                                            "categoryGroup":"allLogs",
+                                            "enabled":true
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "[parameters('rt-ukcore-gwc-dr')]",
                                 "type": "Microsoft.Network/routeTables",
                                 "apiVersion": "2020-11-01",
-                                "location": "[resourceGroup().location]",
-                                "tags": {},
+                                "location": "Germany West Central",
+                                "tags": "[parameters('tags-dr')]",
                                 "properties": {
                                     "routes": [
+                                        {
+                                            "name": "route-vpn-tunnel-to-ps-internal-01",
+                                            "properties": {
+                                                "addressPrefix": "10.8.100.0/22",
+                                                "nextHopType": "VirtualAppliance",
+                                                "nextHopIpAddress": "10.8.96.196"
+                                            }
+                                        },
                                         {
                                             "name": "route-dr-asr-to-pa-nva",
                                             "properties": {

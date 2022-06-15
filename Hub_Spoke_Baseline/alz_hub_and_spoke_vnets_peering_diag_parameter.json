@@ -1,0 +1,112 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {    
+        "dmzLocation": {            
+            "value": "UK South"
+        },
+        "drLocation": {            
+            "value": "Germany West Central"
+        },        
+        "hubSubscriptionId": {            
+            "value": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
+        },
+        "coreSubscriptionId": {            
+            "value": "5837ab01-68c3-4fd7-9c86-b8bcef2c02f0"
+        },
+        "dmzhubvnetRg": {            
+            "value": "uks-dmz-prod-hub-rg"
+        },
+        "drhubvnetRg": {            
+            "value": "gwc-dmz-dr-hub-rg"
+        },
+        "coreprodvnetRg": {            
+            "value": "uks-core-prod-rg"
+        },
+        "drasrvnetRg": {            
+            "value": "gwc-dr-asr-rg"
+        },
+        "dmzhubvnetname": {            
+            "value": "uks-dmz-hub-vnet"
+        },
+        "drhubvnetname": {            
+            "value": "gwc-dr-hub-vnet"
+        },
+        "coreprodvnetname": {            
+            "value": "uks-core-prod-vnet"
+        },
+        "drasrvnetname": {            
+            "value": "gwc-dr-asr-vnet"
+        },
+        "uks-prod-core-nsg-name": {            
+            "value":"uks-prod-core-nsg"
+        },
+        "gwc-dr-asr-nsg-name": {            
+            "value":"gwc-dr-asr-nsg"
+        },
+        "uks-dmz-hub-nsg-name": {            
+            "value":"uks-dmz-hub-nsg"
+        },
+        "gwc-dr-hub-nsg-name": {            
+            "value":"gwc-dr-hub-nsg"
+        },
+        "rt-exphub-uks-hub-nva": {            
+            "value":"rt-exphub-uks-hub-nva"
+        },
+        "rt-exphub-gwc-hub-nva": {            
+            "value":"rt-exphub-gwc-hub-nva"
+        },
+        "rt-ukcore-uks-prod": {            
+            "value":"rt-ukcore-uks-prod"
+        },
+        "rt-ukcore-gwc-dr": {            
+            "value":"rt-ukcore-gwc-dr"
+        },
+        "workspaceName": {            
+            "value":"uks-az-law-p1"
+        },
+        "workspaceResourceGroup": {            
+            "value": "uks-dmz-prod-hub-rg"
+        },
+        "workspaceSubscriptionID": {            
+            "value": "0e6352b0-80fc-48b4-b362-88af9c692b6e"
+        },
+        "storageAccountName": {
+            "value":"lonhubukssadiag"
+        },    
+        "tags-prod": {
+            "value": {
+                "Approver": "Sergio Murteira",
+                "Budget": "INT-599",
+                "CostCenter": "US300 848017 119910",
+                "Department": "Infrastructure",
+                "Engineer": "Wipro Project Build Team",
+                "Environment": "Prod",
+                "ETSApplicationOwner": "Infrastructure",
+                "InceptionDate": "06/15/2022",
+                "Owner": "Darren Bellouny",
+                "PrimaryOwner": "Kav Khurana",
+                "PrimaryUse": "DMZ Hub and Spoke",
+                "Requester": "Mark Gabriel",
+                "Ticket": "REQ0291719 "
+            }
+        },            
+        "tags-dr": {
+            "value": {
+                "Approver": "Sergio Murteira",
+                "Budget": "INT-599",
+                "CostCenter": "US300 848017 119910",
+                "Department": "Infrastructure",
+                "Engineer": "Wipro Project Build Team",
+                "Environment": "DR",
+                "ETSApplicationOwner": "Infrastructure",
+                "InceptionDate": "06/15/2022",
+                "Owner": "Darren Bellouny",
+                "PrimaryOwner": "Kav Khurana",
+                "PrimaryUse": "DR Hub and Spoke",
+                "Requester": "Mark Gabriel",
+                "Ticket": "REQ0291719 "
+            }
+        }
+    }
+}
