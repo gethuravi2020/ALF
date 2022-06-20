@@ -1,0 +1,296 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ukshubvpnlng": {
+            "type": "string",
+            "defaultValue":"uks-hub-s2svpn-lng"
+        },
+        "ukshubvpngwName": {
+            "type": "string",
+            "defaultValue":"uks-hub-s2svpn-gw"
+        },
+        "gwchubvpnlng": {
+            "type": "string",
+            "defaultValue":"gwc-hub-s2svpn-lng"
+        },
+        "gwchubvpngwName": {
+            "type": "string",
+            "defaultValue":"gwc-hub-s2svpn-gw"
+        },
+        "dmzLocation": {
+            "type": "string",
+            "defaultValue":"UK South"
+        },
+        "drLocation": {
+            "type": "string",
+            "defaultValue":"Germany West Central"
+        },
+        "ibmLonlocalAddressPrefix": {
+            "type": "string",
+            "defaultValue":"172.29.0.0/26"
+        },
+        "ibmFralocalAddressPrefix": {
+            "type": "string",
+            "defaultValue":"172.29.0.64/26"
+        },
+        "ibmLonLocalGwIPAddress": {
+            "type": "string",
+            "defaultValue":"1.1.1.1"
+        },
+        "ibmFraLocalGwIPAddress": {
+            "type": "string",
+            "defaultValue":"2.2.2.2"
+        },
+        "uksHubvpnPublicIPAddress": {
+            "type": "string",
+            "defaultValue":"ukshubs2svpnpip01"
+        },
+        "gwcHubvpnPublicIPAddress": {
+            "type": "string",
+            "defaultValue":"gwchubs2svpnpip01"
+        },
+        "hubSubscriptionId": {
+            "type": "string",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+        },        
+        "dmzhubvnetRg": {
+            "type": "string",
+            "defaultValue": "uks-dmz-prod-hub-rg"
+        },
+        "drhubvnetRg": {
+            "type": "string",
+            "defaultValue": "gwc-dmz-dr-hub-rg"
+        },
+        "dmzhubvnetname": {
+            "type": "string",
+            "defaultValue": "uks-dmz-hub-vnet"
+        },
+        "drhubvnetname": {
+            "type": "string",
+            "defaultValue": "gwc-dr-hub-vnet"
+        },
+        "uksHubvpnconnection": {
+            "type": "string",
+            "defaultValue": "gwc-hub-s2svpn-connection01"
+        },
+        "gwcHubvpnconnection": {
+            "type": "string",
+            "defaultValue": "gwc-hub-s2svpn-connection01"
+        },
+        "uksHubVpnsharedKey": {
+            "type": "string",
+            "defaultValue": "gnV7FN5G9watpPzruX2V"
+        },
+        "gwcHubVpnsharedKey": {
+            "type": "string",
+            "defaultValue": "ZEDAtqRevrM0OKi1HblS"
+        },
+        "tags": {
+            "type": "Object",
+            "defaultValue": {}
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+            {
+                "name": "DmzHubVpnGWDeployment",
+                "type": "Microsoft.Resources/deployments",
+                "apiVersion": "2021-04-01",
+                "subscriptionId":"[parameters('hubSubscriptionId')]",
+                "resourceGroup":"[parameters('dmzhubvnetRg')]",
+                "properties": {
+                    "mode": "Incremental",
+                    "template": {
+                        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                        "contentVersion": "1.0.0.0",
+                        "variables": {},
+                        "resources": [
+                            {
+                                "type": "Microsoft.Network/localNetworkGateways",
+                                "apiVersion": "2020-08-01",            
+                                "name": "[parameters('ukshubvpnlng')]",
+                                "location": "[parameters('dmzLocation')]",
+                                "properties": {
+                                    "localNetworkAddressSpace": {
+                                    "addressPrefixes": [
+                                        "[parameters('ibmLonlocalAddressPrefix')]"
+                                    ]
+                                    },
+                                    "gatewayIpAddress": "[parameters('ibmLonLocalGwIPAddress')]"
+                                }
+                            },
+                            {
+                                "name": "[parameters('uksHubvpnPublicIPAddress')]",
+                                "type": "Microsoft.Network/publicIPAddresses",
+                                "apiVersion": "2020-11-01",
+                                "location": "[parameters('dmzLocation')]",
+                                "tags": "[parameters('tags')]",
+                                "properties": {
+                                    "publicIPAllocationMethod": "Dynamic",
+                                    "dnsSettings": {
+                                        "domainNameLabel": "[parameters('uksHubvpnPublicIPAddress')]"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "[parameters('ukshubvpngwName')]",
+                                "type": "Microsoft.Network/virtualNetworkGateways",
+                                "apiVersion": "2020-11-01",
+                                "location": "[parameters('dmzLocation')]",
+                                "dependsOn": [
+                                    "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/publicIPAddresses', parameters('uksHubvpnPublicIPAddress'))]"                                    
+                                ],
+                                "properties": {
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "vnetGatewayConfig",
+                                            "properties": {
+                                                "privateIPAllocationMethod": "Dynamic",
+                                                "subnet": {
+                                                    "id": "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworks/subnets', parameters('dmzhubvnetname'), 'GatewaySubnet')]"
+                                                },
+                                                "publicIPAddress": {
+                                                    "id": "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/publicIPAddresses', parameters('uksHubvpnPublicIPAddress'))]"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "sku": {
+                                        "name": "VpnGw2",
+                                        "tier": "VpnGw2"
+                                    },
+                                    "gatewayType": "Vpn",
+                                    "vpnType": "RouteBased",
+                                    "enableBgp": false
+                                }
+                            },
+                            {
+                                    "apiVersion": "2020-11-01",
+                                    "name": "[parameters('uksHubvpnconnection')]",
+                                    "type": "Microsoft.Network/connections",
+                                    "location": "[parameters('dmzLocation')]",
+                                    "dependsOn": [
+                                        "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworkGateways', parameters('ukshubvpngwName'))]",
+                                        "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/localNetworkGateways', parameters('ukshubvpnlng'))]"
+                                    ],
+                                    "properties": {
+                                        "virtualNetworkGateway1": {
+                                        "id": "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/virtualNetworkGateways', parameters('ukshubvpngwName'))]"
+                                        },
+                                        "localNetworkGateway2": {
+                                        "id": "[resourceId(parameters('hubSubscriptionId'), parameters('dmzhubvnetRg'), 'Microsoft.Network/localNetworkGateways', parameters('ukshubvpnlng'))]"
+                                        },
+                                        "connectionType": "IPsec",
+                                        "routingWeight": 10,
+                                        "sharedKey": "[parameters('uksHubVpnsharedKey')]"
+                                    }
+                                    }                    
+                                ],
+                                "outputs": {}
+                            }
+                        }
+                    },
+                    {
+                    "name": "DrHubVpnGWDeployment",
+                    "type": "Microsoft.Resources/deployments",
+                    "apiVersion": "2021-04-01",
+                    "subscriptionId":"[parameters('hubSubscriptionId')]",
+                    "resourceGroup":"[parameters('drhubvnetRg')]",
+                    "properties": {
+                        "mode": "Incremental",
+                        "template": {
+                            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "variables": {},
+                            "resources": [
+                                {
+                                    "type": "Microsoft.Network/localNetworkGateways",
+                                    "apiVersion": "2020-08-01",            
+                                    "name": "[parameters('gwchubvpnlng')]",
+                                    "location": "[parameters('drLocation')]",
+                                    "properties": {
+                                        "localNetworkAddressSpace": {
+                                        "addressPrefixes": [
+                                            "[parameters('ibmFralocalAddressPrefix')]"
+                                        ]
+                                        },
+                                        "gatewayIpAddress": "[parameters('ibmFraLocalGwIPAddress')]"
+                                    }
+                                },
+                                {
+                                    "name": "[parameters('gwcHubvpnPublicIPAddress')]",
+                                    "type": "Microsoft.Network/publicIPAddresses",
+                                    "apiVersion": "2020-11-01",
+                                    "location": "[parameters('drLocation')]",
+                                    "tags": "[parameters('tags')]",
+                                    "properties": {
+                                        "publicIPAllocationMethod": "Dynamic",
+                                        "dnsSettings": {
+                                            "domainNameLabel": "[parameters('gwcHubvpnPublicIPAddress')]"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "[parameters('gwchubvpngwName')]",
+                                    "type": "Microsoft.Network/virtualNetworkGateways",
+                                    "apiVersion": "2020-11-01",
+                                    "location": "[parameters('drLocation')]",
+                                    "dependsOn": [
+                                        "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/publicIPAddresses', parameters('gwcHubvpnPublicIPAddress'))]"                                        
+                                    ],
+                                    "properties": {
+                                        "ipConfigurations": [
+                                            {
+                                                "name": "vnetGatewayConfig",
+                                                "properties": {
+                                                    "privateIPAllocationMethod": "Dynamic",
+                                                    "subnet": {
+                                                        "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworks/subnets', parameters('drhubvnetname'), 'GatewaySubnet')]"
+                                                    },
+                                                    "publicIPAddress": {
+                                                        "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/publicIPAddresses', parameters('gwcHubvpnPublicIPAddress'))]"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "sku": {
+                                            "name": "VpnGw2",
+                                            "tier": "VpnGw2"
+                                        },
+                                        "gatewayType": "Vpn",
+                                        "vpnType": "RouteBased",
+                                        "enableBgp": false
+                                    }
+                                },
+                                {
+                                        "apiVersion": "2020-11-01",
+                                        "name": "[parameters('gwcHubvpnconnection')]",
+                                        "type": "Microsoft.Network/connections",
+                                        "location": "[parameters('drLocation')]",
+                                        "dependsOn": [
+                                            "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworkGateways', parameters('gwchubvpngwName'))]",
+                                            "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/localNetworkGateways', parameters('gwchubvpnlng'))]"
+                                        ],
+                                        "properties": {
+                                            "virtualNetworkGateway1": {
+                                            "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/virtualNetworkGateways', parameters('gwchubvpngwName'))]"
+                                            },
+                                            "localNetworkGateway2": {
+                                            "id": "[resourceId(parameters('hubSubscriptionId'), parameters('drhubvnetRg'), 'Microsoft.Network/localNetworkGateways', parameters('gwchubvpnlng'))]"
+                                            },
+                                            "connectionType": "IPsec",
+                                            "routingWeight": 10,
+                                            "sharedKey": "[parameters('gwcHubVpnsharedKey')]"
+                                        }
+                                        }
+                        
+                                    ],
+                                    "outputs": {}
+                                }
+                            }
+                        }
+                    ],
+    "outputs": {}
+    }

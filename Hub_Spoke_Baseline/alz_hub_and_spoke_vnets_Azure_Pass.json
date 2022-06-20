@@ -1,0 +1,212 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dmzLocation": {
+            "type": "string",
+            "defaultValue": "UK South"
+        },
+        "drLocation": {
+            "type": "string",
+            "defaultValue": "Germany West Central"
+        },        
+        "hubSubscriptionId": {
+            "type": "string",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+        },
+        "coreSubscriptionId": {
+            "type": "string",
+            "defaultValue": "5837ab01-68c3-4fd7-9c86-b8bcef2c02f0"
+        },
+        "dmzhubvnetRg": {
+            "type": "string",
+            "defaultValue": "uks-dmz-prod-hub-rg"
+        },
+        "drhubvnetRg": {
+            "type": "string",
+            "defaultValue": "gwc-dmz-dr-hub-rg"
+        },
+        "coreprodvnetRg": {
+            "type": "string",
+            "defaultValue": "uks-core-prod-rg"
+        },
+        "drasrvnetRg": {
+            "type": "string",
+            "defaultValue": "gwc-dr-asr-rg"
+        },
+        "dmzhubvnetname": {
+            "type": "string",
+            "defaultValue": "uks-dmz-hub-vnet"
+        },
+        "drhubvnetname": {
+            "type": "string",
+            "defaultValue": "gwc-dr-hub-vnet"
+        },
+        "coreprodvnetname": {
+            "type": "string",
+            "defaultValue": "uks-core-prod-vnet"
+        },
+        "drasrvnetname": {
+            "type": "string",
+            "defaultValue": "gwc-dr-asr-vnet"
+        },
+        "uks-prod-core-nsg-name": {
+            "type": "string",
+            "defaultValue":"uks-prod-core-nsg"
+        },
+        "gwc-dr-asr-nsg-name": {
+            "type": "string",
+            "defaultValue":"gwc-dr-asr-nsg"
+        },
+        "uks-dmz-hub-nsg-name": {
+            "type": "string",
+            "defaultValue":"uks-dmz-hub-nsg"
+        },
+        "gwc-dr-hub-nsg-name": {
+            "type": "string",
+            "defaultValue":"gwc-dr-hub-nsg"
+        },
+        "rt-exphub-uks-hub-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-uks-hub-nva"
+        },
+        "rt-exphub-gwc-hub-nva": {
+            "type": "string",
+            "defaultValue":"rt-exphub-gwc-hub-nva"
+        },
+        "rt-ukcore-uks-prod": {
+            "type": "string",
+            "defaultValue":"rt-ukcore-uks-prod"
+        },
+        "rt-ukcore-gwc-dr": {
+            "type": "string",
+            "defaultValue":"rt-ukcore-gwc-dr"
+        },
+        "workspaceName": {
+            "type": "string",
+            "defaultValue":"uks-az-law-p1"
+        },
+        "workspaceResourceGroup": {
+            "type": "string",
+            "defaultValue": "uks-dmz-prod-hub-rg"
+        },
+        "workspaceSubscriptionID": {
+            "type": "string",
+            "defaultValue": "12f61549-9674-4fc1-b79b-baa2e31ceecf"
+        },
+        "storageAccountName": {
+            "type": "string",
+            "defaultValue":"lonhubukssadiag"
+        },
+        "tags-prod": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "tags-dr": {
+            "type": "object",
+            "defaultValue": {}
+        }
+    },
+    "functions": [],
+    "variables": {
+        "peering-name-ukshub-to-ukscore": "peering-ukshub-to-ukscore",
+        "peering-name-ukscore-to-ukshub": "peering-ukscore-to-ukshub",
+        "peering-name-ukshub-to-gwchub": "peering-ukshub-to-gwchub",
+        "peering-name-gwchub-to-ukshub": "peering-gwchub-to-ukshub",
+        "peering-name-ukscore-to-gwcasr": "peering-ukscore-to-gwcasr",
+        "peering-name-gwcasr-to-ukscore": "peering-gwcasr-to-ukscore",
+        "peering-name-gwchub-to-gwcasr": "peering-gwchub-to-gwasr",
+        "peering-name-gwcasr-to-gwchub": "peering-gwcasr-to-gwchub"
+    },
+    "resources": [
+    {
+        "name": "DmzHubVnetDeployment",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2021-04-01",
+        "subscriptionId":"[parameters('hubSubscriptionId')]",
+        "resourceGroup": "[parameters('dmzhubvnetRg')]",
+        "tags": "[parameters('tags-prod')]",
+        "properties": {
+            "mode": "Incremental",
+            "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "variables": {},
+                "resources": [
+                    {
+                        "name": "[parameters('dmzhubvnetname')]",
+                        "type": "Microsoft.Network/virtualNetworks",
+                        "apiVersion": "2020-11-01",
+                        "location": "[parameters('dmzLocation')]",                       
+                        "tags": "[parameters('tags-prod')]",
+                        "properties": {
+                            "addressSpace": {
+                                "addressPrefixes": [
+                                    "10.8.32.0/19"
+                                ]
+                            },
+                            "subnets": [
+                                {
+                                    "name": "GatewaySubnet",
+                                    "properties": {
+                                        "addressPrefix": "10.8.32.0/27"                                        
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                    
+                ],
+                "outputs": {}
+            }
+        }
+    },
+    {
+       "name": "DmzDrVnetDeployment",
+       "type": "Microsoft.Resources/deployments",
+       "apiVersion": "2021-04-01",
+       "subscriptionId":"[parameters('hubSubscriptionId')]",     
+       "resourceGroup":"[parameters('drhubvnetRg')]",
+       "tags":"[parameters('tags-dr')]",
+       "properties": {
+           "mode": "Incremental",
+           "template": {
+               "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+               "contentVersion": "1.0.0.0",
+               "variables": {},
+               "resources": [
+                {
+                "name": "[parameters('drhubvnetname')]",
+                "type": "Microsoft.Network/virtualNetworks",
+                "apiVersion": "2020-11-01",
+                "location": "[parameters('drLocation')]",                    
+                "tags": "[parameters('tags-dr')]",
+                "properties": {
+                    "addressSpace": {
+                        "addressPrefixes": [
+                            "10.8.96.0/19"
+                        ]
+                    },
+                    "subnets": [
+                        {
+                            "name": "GatewaySubnet",
+                            "properties": {
+                                "addressPrefix": "10.8.96.0/27"
+                            }
+                        }
+                            ]
+                        }
+                }
+                
+               ],
+               "outputs": {}
+           }
+       }
+   }       
+                    
+    ],
+    "outputs": {}
+}
+
+
+
